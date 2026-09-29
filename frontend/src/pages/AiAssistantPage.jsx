@@ -1,25 +1,22 @@
 import React, { useRef, useState, useEffect } from 'react';
-import AppLayout from '../components/layout/AppLayout';
 import { MessageSquareText, Send, Bot, User, Lightbulb, AlertTriangle, CheckCircle, Info, Activity } from 'lucide-react';
 import { assistantService, projectService } from '../services/api';
 
 const SUGGESTIONS = [
-  'Why is this project high risk?',
-  'What are the main risk factors?',
-  'What caused the risk score to increase?',
-  'What is the predicted cost overrun risk?',
-  'What milestones are delayed?',
-  'What should the project team review?',
-  'Compare the current progress with planned progress.',
-  'Summarize the project\'s current status.',
-  'Which factors are contributing most to risk?',
+  'Which projects are at high risk?',
+  'Show delayed projects.',
+  'Which projects have cost overruns?',
+  'What is the risk of this project?',
+  'Show water infrastructure projects.',
+  'What is the progress of this project?',
+  'Show projects in Karnataka',
 ];
 
 export default function AiAssistantPage() {
   const [messages, setMessages] = useState([
     {
       role: 'bot',
-      content: 'Hello! I\'m the AI Assistant for the InfraWatch portal. Please select a project and I can help you understand its risks, alerts, cost overruns, and recommend actions.',
+      content: 'Hello! I\'m the AI Project Intelligence Assistant for the InfraWatch portal. You can ask me global portfolio questions or select a specific project to understand its risks, alerts, progress, and recommended actions.',
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
     }
   ]);
@@ -41,7 +38,7 @@ export default function AiAssistantPage() {
 
   const send = async (question) => {
     const q = question || input.trim();
-    if (!q || !selectedProjectId) return;
+    if (!q) return; // Allow empty selectedProjectId for global queries
     setInput('');
 
     const userMsg = { role: 'user', content: q, time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) };
@@ -49,7 +46,7 @@ export default function AiAssistantPage() {
     setLoading(true);
 
     try {
-      const res = await assistantService.chat({ message: q, projectId: selectedProjectId });
+      const res = await assistantService.chat({ message: q, projectId: selectedProjectId || null });
       setMessages(prev => [...prev, { 
         role: 'bot', 
         content: res.data.reply, 
@@ -69,15 +66,15 @@ export default function AiAssistantPage() {
   };
 
   return (
-    <AppLayout>
+    <>
       <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="text-xs font-semibold text-slate-500 mb-1 tracking-wide uppercase">AI Features / Assistant</div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
             <MessageSquareText className="w-6 h-6 text-brand-600" />
-            AI Query Assistant
+            AI Project Intelligence Assistant
           </h1>
-          <p className="text-slate-600 text-sm mt-1">Interrogate project data and ML predictions using natural language</p>
+          <p className="text-slate-600 text-sm mt-1">Interrogate portfolio data and project details using natural language</p>
         </div>
       </div>
 
@@ -85,12 +82,13 @@ export default function AiAssistantPage() {
         {/* Left Sidebar */}
         <div className="space-y-6">
           <div className="gov-card p-5 bg-slate-50">
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Select Target Project</label>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Select Target Context</label>
             <select
               value={selectedProjectId}
               onChange={e => setSelectedProjectId(e.target.value)}
               className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:border-brand-500 shadow-sm"
             >
+              <option value="">Global Portfolio Context</option>
               {projects.map(p => (
                 <option key={p.id} value={p.id}>{p.projectCode} - {p.projectName}</option>
               ))}
@@ -197,6 +195,6 @@ export default function AiAssistantPage() {
           </div>
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 }

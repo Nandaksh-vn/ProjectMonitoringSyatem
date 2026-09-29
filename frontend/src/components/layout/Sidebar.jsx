@@ -9,14 +9,14 @@ import {
 import { clsx } from 'clsx';
 
 const NAV_ITEMS = [
-  { to: '/',              label: 'Dashboard',         icon: LayoutDashboard },
-  { to: '/projects',      label: 'Projects',           icon: FolderKanban },
-  { to: '/risk-analytics',label: 'Risk Analytics',     icon: BarChart3 },
-  { to: '/alerts',        label: 'Early Warnings',     icon: Bell },
-  { to: '/recommendations',label:'Recommendations',    icon: Lightbulb },
-  { to: '/model-performance',label:'Model Performance',icon: Cpu },
-  { to: '/data-upload',   label: 'Data Upload',        icon: Upload },
-  { to: '/ai-assistant',  label: 'AI Assistant',       icon: MessageSquareText },
+  { to: '/dashboard',                   label: 'Dashboard',         icon: LayoutDashboard },
+  { to: '/projects',                    label: 'Projects',          icon: FolderKanban },
+  { to: '/risk-analytics',              label: 'Risk Analytics',    icon: BarChart3 },
+  { to: '/early-warnings',              label: 'Early Warnings',    icon: Bell },
+  { to: '/recommendations',             label: 'Recommendations',   icon: Lightbulb },
+  { to: '/model-performance',           label: 'Model Performance', icon: Cpu },
+  { to: '/data-upload',                 label: 'Data Upload',       icon: Upload },
+  { to: '/ai-assistant',                label: 'AI Assistant',      icon: MessageSquareText },
 ];
 
 export default function Sidebar() {
@@ -46,7 +46,13 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+        {NAV_ITEMS.filter(item => {
+          const canManage = user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_PROJECT_MANAGER';
+          if (!canManage && item.to !== '/projects' && item.to !== '/dashboard') {
+            return false;
+          }
+          return true;
+        }).map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}

@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import AppLayout from '../components/layout/AppLayout';
 import { Upload, FileText, CheckCircle2, XCircle, AlertTriangle, Info, Download } from 'lucide-react';
 import api from '../services/api';
 
@@ -55,6 +54,16 @@ export default function DataUploadPage() {
   const [result, setResult] = useState(null);
   const [validationErrors, setValidationErrors] = useState([]);
 
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+
+  // Fetch projects on load
+  React.useEffect(() => {
+    api.get('/projects?size=200')
+      .then(r => setProjects(r.data?.content || r.data || []))
+      .catch(e => console.error('Failed to load projects', e));
+  }, []);
+
   const handleFiles = (newFiles) => {
     const valid = newFiles.filter(f => ACCEPTED_TYPES.includes(f.type) || f.name.endsWith('.csv') || f.name.endsWith('.xlsx'));
     const invalid = newFiles.filter(f => !valid.includes(f));
@@ -66,17 +75,23 @@ export default function DataUploadPage() {
 
   const handleUpload = async () => {
     if (!files.length) return;
+    if (uploadType.id !== 'project-data' && !selectedProjectId) {
+      setValidationErrors(['Please select a project before uploading this data type.']);
+      return;
+    }
+    
     setStatus('uploading');
     setResult(null);
     setValidationErrors([]);
 
     const formData = new FormData();
     files.forEach(f => formData.append('file', f));
+    if (selectedProjectId && uploadType.id !== 'project-data') {
+      formData.append('projectId', selectedProjectId);
+    }
 
     try {
-      const res = await api.post(uploadType.endpoint, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.post(uploadType.endpoint, formData); // Removed explicit Content-Type to preserve boundary
       setStatus('success');
       setResult(res.data);
     } catch (err) {
@@ -90,7 +105,7 @@ export default function DataUploadPage() {
   };
 
   return (
-    <AppLayout>
+    <>
       <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="text-xs font-semibold text-slate-500 mb-1 tracking-wide uppercase">Admin / Data</div>
@@ -133,6 +148,24 @@ export default function DataUploadPage() {
             ))}
           </div>
           
+          {/* Project Selection */}
+          {uploadType.id !== 'project-data' && (
+            <div className="bg-white border border-slate-200 rounded p-4 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-800 mb-2">Select Project *</h3>
+              <p className="text-xs text-slate-500 mb-3">You must select a project to attach this data to.</p>
+              <select
+                value={selectedProjectId}
+                onChange={(e) => setSelectedProjectId(e.target.value)}
+                className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 bg-slate-50"
+              >
+                <option value="">-- Search / Select Project --</option>
+                {projects.map(p => (
+                  <option key={p.id} value={p.id}>{p.projectCode} - {p.projectName}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Format guide */}
           <div className="bg-slate-50 border border-slate-200 rounded p-4 mt-6">
             <h3 className="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide flex items-center gap-1.5"><FileText className="w-4 h-4" /> Expected Format</h3>
@@ -199,12 +232,35 @@ export default function DataUploadPage() {
             
             {/* Result */}
             {status === 'success' && (
-              <div className="mt-4 flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded text-emerald-900 shadow-sm">
-                <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600" />
-                <div>
-                  <p className="font-bold text-sm text-emerald-800">Import Successful</p>
-                  <p className="text-sm mt-1 font-medium">{result?.message || 'Data validated and imported successfully.'}</p>
-                  {result?.rowsImported && <p className="text-sm font-bold mt-1 bg-emerald-100 inline-block px-2 py-0.5 rounded">Records imported: {result.rowsImported}</p>}
+              <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded text-emerald-900 shadow-sm">
+                <div className="flex items-start gap-3 mb-3">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600" />
+                  <div>
+                    <p className="font-bold text-sm text-emerald-800">Upload Successful</p>
+                    <p className="text-sm mt-1 font-medium">{result?.message || 'Data validated and imported successfully.'}</p>
+                    {uploadType.id !== 'project-data' && (
+                      <p className="text-sm font-bold mt-1 text-emerald-700">Project: {projects.find(p => p.id.toString() === selectedProjectId.toString())?.projectName || selectedProjectId}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 pt-4 border-t border-emerald-100">
+                  <div className="bg-white p-2 rounded border border-emerald-100 text-center">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Records Processed</div>
+                    <div className="text-lg font-bold text-slate-800">{result?.recordsProcessed || 0}</div>
+                  </div>
+                  <div className="bg-white p-2 rounded border border-emerald-100 text-center">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Records Inserted</div>
+                    <div className="text-lg font-bold text-emerald-600">{result?.recordsInserted || 0}</div>
+                  </div>
+                  <div className="bg-white p-2 rounded border border-emerald-100 text-center">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Records Updated</div>
+                    <div className="text-lg font-bold text-blue-600">{result?.recordsUpdated || 0}</div>
+                  </div>
+                  <div className="bg-white p-2 rounded border border-emerald-100 text-center">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Records Rejected</div>
+                    <div className="text-lg font-bold text-red-600">{result?.recordsRejected || 0}</div>
+                  </div>
                 </div>
               </div>
             )}
@@ -212,14 +268,14 @@ export default function DataUploadPage() {
               <div className="mt-4 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded text-red-900 shadow-sm">
                 <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-red-600" />
                 <div>
-                  <p className="font-bold text-sm text-red-800">Import Failed</p>
-                  <p className="text-sm mt-1 font-medium">{result?.message}</p>
+                  <p className="font-bold text-sm text-red-800">Upload Failed</p>
+                  <p className="text-sm mt-1 font-medium break-words">Reason: {result?.message}</p>
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 }

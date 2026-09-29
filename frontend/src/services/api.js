@@ -25,7 +25,13 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('infrawatch_token');
       localStorage.removeItem('infrawatch_user');
-      window.location.href = '/login';
+      
+      const path = window.location.pathname;
+      const isPublic = path === '/' || path === '/login' || path.startsWith('/sectors') || path.startsWith('/projects');
+      
+      if (!isPublic) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(err);
   }
@@ -41,12 +47,22 @@ export const authService = {
   },
 };
 
+// ─── Public ───────────────────────────────────────────────────────────────────
+export const publicService = {
+  getStats: () => api.get('/public/stats'),
+  getProjects: () => api.get('/public/projects'),
+  getProjectById: (id) => api.get(`/public/projects/${id}`),
+  getSectors: () => api.get('/public/sectors'),
+};
+
 // ─── Projects ────────────────────────────────────────────────────────────────
 export const projectService = {
   getAll: (params) => api.get('/projects', { params: { size: 200, ...params } }),
   getById: (id) => api.get(`/projects/${id}`),
+  create: (data) => api.post('/projects', data),
   getMonthlyData: (id) => api.get(`/projects/${id}/monthly-data`),
   getMilestones: (id) => api.get(`/projects/${id}/milestones`),
+  getRiskFactors: (id) => api.get(`/projects/${id}/risk-factors`),
 };
 
 // ─── Predictions ─────────────────────────────────────────────────────────────
