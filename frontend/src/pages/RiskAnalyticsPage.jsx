@@ -10,11 +10,12 @@ import {
 import { BarChart3 } from 'lucide-react';
 
 const TOOLTIP_STYLE = {
-  backgroundColor: '#1e293b', border: '1px solid #334155',
-  borderRadius: 8, color: '#f1f5f9', fontSize: 12,
+  backgroundColor: '#ffffff', border: '1px solid #e2e8f0',
+  borderRadius: 4, color: '#0f172a', fontSize: 12,
+  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
 };
 
-const RISK_COLORS = { CRITICAL: '#ef4444', HIGH: '#f97316', MEDIUM: '#f59e0b', LOW: '#10b981' };
+const RISK_COLORS = { CRITICAL: '#dc2626', HIGH: '#ea580c', MEDIUM: '#d97706', LOW: '#059669' };
 
 export default function RiskAnalyticsPage() {
   const [projects, setProjects] = useState([]);
@@ -63,21 +64,24 @@ export default function RiskAnalyticsPage() {
 
   return (
     <AppLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-          <BarChart3 className="w-6 h-6 text-violet-400" />
-          Risk Analytics
-        </h1>
-        <p className="text-slate-400 text-sm mt-1">Portfolio-level risk intelligence and trend analysis</p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div className="text-xs font-semibold text-slate-500 mb-1 tracking-wide uppercase">Home / Analytics</div>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            <BarChart3 className="w-6 h-6 text-brand-600" />
+            Risk Analytics
+          </h1>
+          <p className="text-slate-600 text-sm mt-1">Portfolio-level risk intelligence and trend analysis</p>
+        </div>
       </div>
 
       {/* Risk summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {riskDist.map(({ name, value }) => (
-          <div key={name} className="bg-slate-900/70 border border-slate-800 rounded-xl p-5 text-center">
+          <div key={name} className="gov-card p-5 text-center">
             <RiskBadge level={name} />
-            <p className="text-3xl font-bold text-slate-100 mt-3">{value}</p>
-            <p className="text-xs text-slate-400 mt-1">projects</p>
+            <p className="text-3xl font-bold text-slate-900 mt-3">{value}</p>
+            <p className="text-xs font-medium text-slate-500 mt-1 uppercase tracking-wide">projects</p>
           </div>
         ))}
       </div>
@@ -85,24 +89,24 @@ export default function RiskAnalyticsPage() {
       {/* Charts grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
         {/* Cost Overrun vs Progress Scatter */}
-        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-slate-200 mb-4">Cost Overrun vs Physical Progress</h3>
+        <div className="gov-card p-5">
+          <h3 className="text-sm font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Cost Overrun vs Physical Progress</h3>
           <ResponsiveContainer width="100%" height={280}>
-            <ScatterChart>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="physicalProgress" name="Physical Progress" unit="%" tick={{ fill: '#94a3b8', fontSize: 10 }} />
-              <YAxis dataKey="costOverrun" name="Cost Overrun" unit="%" tick={{ fill: '#94a3b8', fontSize: 10 }} />
+            <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="physicalProgress" name="Physical Progress" unit="%" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+              <YAxis dataKey="costOverrun" name="Cost Overrun" unit="%" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={TOOLTIP_STYLE}
-                cursor={{ strokeDasharray: '3 3' }}
+                cursor={{ strokeDasharray: '3 3', stroke: '#cbd5e1' }}
                 content={({ payload }) => {
                   if (!payload?.length) return null;
                   const d = payload[0]?.payload;
                   return (
-                    <div style={TOOLTIP_STYLE} className="p-3 rounded-lg">
-                      <p className="font-semibold text-xs">{d?.fullName}</p>
-                      <p className="text-xs">Progress: {d?.physicalProgress?.toFixed(1)}%</p>
-                      <p className="text-xs">Cost Overrun: {d?.costOverrun?.toFixed(1)}%</p>
+                    <div style={TOOLTIP_STYLE} className="p-3">
+                      <p className="font-bold text-slate-800 text-xs mb-2">{d?.fullName}</p>
+                      <p className="text-xs text-slate-600 font-medium">Progress: {d?.physicalProgress?.toFixed(1)}%</p>
+                      <p className="text-xs text-slate-600 font-medium mb-2">Cost Overrun: {d?.costOverrun?.toFixed(1)}%</p>
                       <RiskBadge level={d?.riskLevel} />
                     </div>
                   );
@@ -116,41 +120,41 @@ export default function RiskAnalyticsPage() {
                   fill={RISK_COLORS[rl]}
                 />
               ))}
-              <Legend formatter={(v) => <span className="text-xs text-slate-300">{v}</span>} />
+              <Legend formatter={(v) => <span className="text-xs font-semibold text-slate-700">{v}</span>} wrapperStyle={{ paddingTop: '10px' }} />
             </ScatterChart>
           </ResponsiveContainer>
         </div>
 
         {/* Risk by Ministry stacked bar */}
-        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-slate-200 mb-4">Risk Distribution by Ministry</h3>
+        <div className="gov-card p-5">
+          <h3 className="text-sm font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Risk Distribution by Ministry</h3>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={ministryRiskData} barSize={22}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 10 }} />
-              <YAxis tick={{ fill: '#94a3b8', fontSize: 10 }} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} />
-              <Legend formatter={(v) => <span className="text-xs text-slate-300">{v}</span>} />
-              <Bar dataKey="CRITICAL" stackId="a" fill="#ef4444" />
-              <Bar dataKey="HIGH" stackId="a" fill="#f97316" />
-              <Bar dataKey="MEDIUM" stackId="a" fill="#f59e0b" />
-              <Bar dataKey="LOW" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} />
+            <BarChart data={ministryRiskData} barSize={24} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: '#f8fafc' }} />
+              <Legend formatter={(v) => <span className="text-xs font-semibold text-slate-700">{v}</span>} wrapperStyle={{ paddingTop: '10px' }} />
+              <Bar dataKey="CRITICAL" stackId="a" fill="#dc2626" />
+              <Bar dataKey="HIGH" stackId="a" fill="#ea580c" />
+              <Bar dataKey="MEDIUM" stackId="a" fill="#d97706" />
+              <Bar dataKey="LOW" stackId="a" fill="#059669" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Project risk table */}
-      <div className="bg-slate-900/70 border border-slate-800 rounded-xl">
-        <div className="px-6 py-4 border-b border-slate-800">
-          <h3 className="text-sm font-semibold text-slate-200">Project Risk Summary</h3>
+      <div className="gov-card">
+        <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 rounded-t">
+          <h3 className="text-sm font-bold text-slate-800">Project Risk Summary</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-800">
-                {['Code', 'Project', 'Risk Score', 'Risk Level', 'Cost Overrun%', 'Delay (months)', 'Status'].map(h => (
-                  <th key={h} className="text-left text-xs text-slate-400 px-4 py-3 uppercase tracking-wider">{h}</th>
+              <tr className="border-b border-slate-200 bg-white">
+                {['Project ID', 'Project Name', 'Risk Score', 'Risk Level', 'Cost Overrun%', 'Delay (months)', 'Status'].map(h => (
+                  <th key={h} className="text-left text-xs font-bold text-slate-600 px-5 py-3 uppercase tracking-wide bg-slate-50/50">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -160,19 +164,19 @@ export default function RiskAnalyticsPage() {
                 .map(p => {
                   const pred = p.predictions?.[0];
                   return (
-                    <tr key={p.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs text-slate-400">{p.projectCode}</td>
-                      <td className="px-4 py-3 text-slate-200 text-sm font-medium">{p.projectName}</td>
-                      <td className="px-4 py-3 font-mono text-slate-200">{pred?.overallRiskScore?.toFixed(1) || '—'}</td>
-                      <td className="px-4 py-3"><RiskBadge level={pred?.riskLevel} /></td>
-                      <td className="px-4 py-3 font-mono text-xs text-slate-300">
+                    <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                      <td className="px-5 py-3 font-mono text-xs font-medium text-slate-600">{p.projectCode}</td>
+                      <td className="px-5 py-3 text-slate-900 text-sm font-semibold">{p.projectName}</td>
+                      <td className="px-5 py-3 font-mono font-bold text-slate-800">{pred?.overallRiskScore?.toFixed(1) || '—'}</td>
+                      <td className="px-5 py-3"><RiskBadge level={pred?.riskLevel} /></td>
+                      <td className="px-5 py-3 font-mono text-xs font-semibold text-slate-700">
                         {pred?.predictedCostOverrunPct?.toFixed(1) || '—'}%
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-slate-300">
+                      <td className="px-5 py-3 font-mono text-xs font-semibold text-slate-700">
                         {pred?.predictedDelayMonths?.toFixed(0) || '—'}
                       </td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${p.status === 'CRITICAL' ? 'text-red-400' : p.status === 'DELAYED' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      <td className="px-5 py-3">
+                        <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase ${p.status === 'CRITICAL' ? 'bg-red-50 text-red-700 border border-red-200' : p.status === 'DELAYED' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
                           {p.status}
                         </span>
                       </td>

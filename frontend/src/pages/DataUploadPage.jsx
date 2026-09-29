@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import AppLayout from '../components/layout/AppLayout';
-import { Upload, FileText, CheckCircle2, XCircle, AlertTriangle, Info } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, XCircle, AlertTriangle, Info, Download } from 'lucide-react';
 import api from '../services/api';
 
 const ACCEPTED_TYPES = ['text/csv', 'application/vnd.ms-excel',
@@ -26,14 +26,16 @@ function DropZone({ onFiles, disabled }) {
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
-      className={`flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-xl p-10 cursor-pointer transition-all ${
+      className={`flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded bg-slate-50 p-12 cursor-pointer transition-all ${
         disabled ? 'opacity-40 cursor-not-allowed' : ''
-      } ${dragging ? 'border-cyan-400 bg-cyan-500/5' : 'border-slate-700 hover:border-slate-600 bg-slate-800/30 hover:bg-slate-800/50'}`}
+      } ${dragging ? 'border-brand-500 bg-brand-50' : 'border-slate-300 hover:border-brand-400 hover:bg-brand-50/50'}`}
     >
-      <Upload className={`w-10 h-10 ${dragging ? 'text-cyan-400' : 'text-slate-500'}`} />
+      <div className={`p-4 rounded-full mb-2 ${dragging ? 'bg-brand-100' : 'bg-slate-200'}`}>
+        <Upload className={`w-8 h-8 ${dragging ? 'text-brand-600' : 'text-slate-500'}`} />
+      </div>
       <div className="text-center">
-        <p className="text-sm font-medium text-slate-300">Drop CSV/Excel file here or <span className="text-cyan-400">browse</span></p>
-        <p className="text-xs text-slate-500 mt-1">Supports .csv, .xlsx, .xls — Max 10 MB</p>
+        <p className="text-sm font-bold text-slate-700">Drop CSV/Excel file here or <span className="text-brand-600 underline">browse</span></p>
+        <p className="text-xs font-medium text-slate-500 mt-2">Supports .csv, .xlsx, .xls — Max 10 MB per file</p>
       </div>
       <input
         type="file"
@@ -83,126 +85,138 @@ export default function DataUploadPage() {
       if (errData?.validationErrors) {
         setValidationErrors(errData.validationErrors);
       }
-      setResult({ message: errData?.message || err.message || 'Upload failed' });
+      setResult({ message: errData?.message || err.message || 'Upload failed due to server error.' });
     }
   };
 
   return (
     <AppLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-          <Upload className="w-6 h-6 text-blue-400" />
-          Data Upload
-        </h1>
-        <p className="text-slate-400 text-sm mt-1">Upload monitoring data CSV/Excel files for processing and validation</p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div className="text-xs font-semibold text-slate-500 mb-1 tracking-wide uppercase">Admin / Data</div>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <Upload className="w-6 h-6 text-brand-600" />
+            Bulk Data Upload
+          </h1>
+          <p className="text-slate-600 text-sm mt-1">Upload project monitoring data CSV/Excel files for batch processing</p>
+        </div>
+        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50 transition-colors shadow-sm">
+          <Download className="w-4 h-4" /> Download Template
+        </button>
       </div>
 
       {/* Authorization notice */}
-      <div className="flex items-start gap-3 px-4 py-3 bg-blue-500/5 border border-blue-500/20 rounded-xl mb-6 text-sm text-blue-300">
-        <Info className="w-4 h-4 shrink-0 mt-0.5" />
+      <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded mb-6 text-sm text-blue-900 shadow-sm">
+        <Info className="w-5 h-5 shrink-0 mt-0.5 text-blue-600" />
         <div>
-          <strong>Authorization Required:</strong> Only authorized users (Admin/Monitor role) can upload data.
-          Uploaded files undergo server-side validation before database insertion.
+          <strong className="block mb-0.5 font-bold">Authorization Required:</strong> Only authorized users (Admin/Monitor roles) can upload bulk data. 
+          All uploaded files undergo strict server-side validation against database schemas before insertion.
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Upload type selector */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-300 mb-3">Select Data Type</h2>
-          {UPLOAD_TYPES.map(t => (
-            <button
-              key={t.id}
-              onClick={() => { setUploadType(t); setFiles([]); setStatus(null); setResult(null); }}
-              className={`w-full text-left p-4 rounded-xl border transition-all ${uploadType.id === t.id
-                ? 'bg-cyan-500/10 border-cyan-500/40 text-cyan-300'
-                : 'bg-slate-900/70 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-300'}`}
-            >
-              <p className="font-medium text-sm">{t.label}</p>
-              <p className="text-xs mt-1 opacity-70">{t.description}</p>
-            </button>
-          ))}
+        <div className="space-y-4">
+          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide border-b border-slate-200 pb-2">Select Import Category</h2>
+          <div className="space-y-2">
+            {UPLOAD_TYPES.map(t => (
+              <button
+                key={t.id}
+                onClick={() => { setUploadType(t); setFiles([]); setStatus(null); setResult(null); }}
+                className={`w-full text-left p-4 rounded border transition-all ${uploadType.id === t.id
+                  ? 'bg-brand-50 border-brand-500 shadow-sm'
+                  : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm'}`}
+              >
+                <p className={`font-bold text-sm ${uploadType.id === t.id ? 'text-brand-800' : 'text-slate-800'}`}>{t.label}</p>
+                <p className={`text-xs mt-1 font-medium ${uploadType.id === t.id ? 'text-brand-600' : 'text-slate-500'}`}>{t.description}</p>
+              </button>
+            ))}
+          </div>
+          
+          {/* Format guide */}
+          <div className="bg-slate-50 border border-slate-200 rounded p-4 mt-6">
+            <h3 className="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide flex items-center gap-1.5"><FileText className="w-4 h-4" /> Expected Format</h3>
+            <p className="text-xs text-slate-600 font-mono leading-relaxed">
+              {uploadType.id === 'monthly-data' &&
+                'project_id, reporting_month, planned_physical_progress, actual_physical_progress, planned_financial_progress, actual_financial_progress, monthly_expenditure, cumulative_expenditure, milestones_planned, milestones_completed, milestones_delayed, revised_cost, revised_completion_date'}
+              {uploadType.id === 'project-data' &&
+                'project_code, project_name, ministry_id, sector_id, agency_id, state, district, approved_cost, revised_cost, approval_date, original_start_date, original_completion_date, status'}
+              {uploadType.id === 'prediction-data' &&
+                'project_id, model_version_id, cost_overrun_probability, predicted_cost_overrun_pct, time_overrun_probability, predicted_delay_months, overall_risk_score, risk_level'}
+            </p>
+          </div>
         </div>
 
         {/* Upload area */}
-        <div className="xl:col-span-2 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-300">Upload: {uploadType.label}</h2>
+        <div className="xl:col-span-2 space-y-5">
+          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide border-b border-slate-200 pb-2">Upload: {uploadType.label}</h2>
 
-          <DropZone onFiles={handleFiles} disabled={status === 'uploading'} />
+          <div className="gov-card p-6">
+            <DropZone onFiles={handleFiles} disabled={status === 'uploading'} />
 
-          {/* File list */}
-          {files.length > 0 && (
-            <div className="space-y-2">
-              {files.map((f, i) => (
-                <div key={i} className="flex items-center gap-3 px-4 py-3 bg-slate-800/60 border border-slate-700 rounded-lg">
-                  <FileText className="w-4 h-4 text-blue-400 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-200 truncate">{f.name}</p>
-                    <p className="text-xs text-slate-500">{(f.size / 1024).toFixed(1)} KB</p>
+            {/* File list */}
+            {files.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {files.map((f, i) => (
+                  <div key={i} className="flex items-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded shadow-sm">
+                    <FileText className="w-5 h-5 text-brand-600 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-800 truncate">{f.name}</p>
+                      <p className="text-xs font-semibold text-slate-500">{(f.size / 1024).toFixed(1)} KB</p>
+                    </div>
+                    <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))} className="text-slate-400 hover:text-red-600 transition-colors bg-slate-50 hover:bg-red-50 p-1.5 rounded">
+                      <XCircle className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))} className="text-slate-500 hover:text-red-400 transition-colors">
-                    <XCircle className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Validation errors */}
-          {validationErrors.length > 0 && (
-            <div className="space-y-1">
-              {validationErrors.map((e, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs text-red-400 px-3 py-2 bg-red-500/10 rounded-lg border border-red-500/20">
-                  <XCircle className="w-3.5 h-3.5 shrink-0" /> {e}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Upload button */}
-          <button
-            id="upload-btn"
-            onClick={handleUpload}
-            disabled={!files.length || status === 'uploading'}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/40 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
-          >
-            {status === 'uploading'
-              ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Uploading & Validating...</>
-              : <><Upload className="w-4 h-4" /> Upload & Validate</>}
-          </button>
-
-          {/* Result */}
-          {status === 'success' && (
-            <div className="flex items-start gap-3 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300">
-              <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-sm">Upload Successful</p>
-                <p className="text-xs mt-1 opacity-80">{result?.message || 'Data validated and imported successfully.'}</p>
-                {result?.rowsImported && <p className="text-xs mt-1">Rows imported: {result.rowsImported}</p>}
+                ))}
               </div>
-            </div>
-          )}
-          {status === 'error' && (
-            <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300">
-              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-sm">Upload Failed</p>
-                <p className="text-xs mt-1 opacity-80">{result?.message}</p>
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* Format guide */}
-          <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
-            <h3 className="text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">Expected Format</h3>
-            <p className="text-xs text-slate-500">
-              {uploadType.id === 'monthly-data' &&
-                'Required columns: project_id, reporting_month, planned_physical_progress, actual_physical_progress, planned_financial_progress, actual_financial_progress, monthly_expenditure, cumulative_expenditure, milestones_planned, milestones_completed, milestones_delayed, revised_cost, revised_completion_date'}
-              {uploadType.id === 'project-data' &&
-                'Required columns: project_code, project_name, ministry_id, sector_id, agency_id, state, district, approved_cost, revised_cost, approval_date, original_start_date, original_completion_date, status'}
-              {uploadType.id === 'prediction-data' &&
-                'Required columns: project_id, model_version_id, cost_overrun_probability, predicted_cost_overrun_pct, time_overrun_probability, predicted_delay_months, overall_risk_score, risk_level'}
-            </p>
+            {/* Validation errors */}
+            {validationErrors.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {validationErrors.map((e, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm font-medium text-red-700 px-4 py-3 bg-red-50 rounded border border-red-200">
+                    <XCircle className="w-4 h-4 shrink-0 text-red-500" /> {e}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload button */}
+            <div className="mt-6">
+              <button
+                id="upload-btn"
+                onClick={handleUpload}
+                disabled={!files.length || status === 'uploading'}
+                className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold py-3 rounded transition-colors text-sm shadow-sm"
+              >
+                {status === 'uploading'
+                  ? <><div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" /> Processing & Validating Upload...</>
+                  : <><Upload className="w-4 h-4" /> Secure Upload & Validate</>}
+              </button>
+            </div>
+            
+            {/* Result */}
+            {status === 'success' && (
+              <div className="mt-4 flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded text-emerald-900 shadow-sm">
+                <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600" />
+                <div>
+                  <p className="font-bold text-sm text-emerald-800">Import Successful</p>
+                  <p className="text-sm mt-1 font-medium">{result?.message || 'Data validated and imported successfully.'}</p>
+                  {result?.rowsImported && <p className="text-sm font-bold mt-1 bg-emerald-100 inline-block px-2 py-0.5 rounded">Records imported: {result.rowsImported}</p>}
+                </div>
+              </div>
+            )}
+            {status === 'error' && (
+              <div className="mt-4 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded text-red-900 shadow-sm">
+                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-red-600" />
+                <div>
+                  <p className="font-bold text-sm text-red-800">Import Failed</p>
+                  <p className="text-sm mt-1 font-medium">{result?.message}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

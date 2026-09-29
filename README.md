@@ -11,7 +11,7 @@ InfraWatch AI shifts the paradigm:
 ## Architecture & Technology Stack
 The platform is composed of 3 integrated microservices:
 1. **Frontend (React, Vite, TailwindCSS, Recharts)**: A modern, glassmorphism-inspired analytics dashboard.
-2. **Backend (Spring Boot, Java 21, MySQL/H2)**: Handles authentication (JWT), role-based access, API routing, and AI Assistant context grounding.
+2. **Backend (Spring Boot, Java 21, MySQL 8.0)**: Handles authentication (JWT), role-based access, API routing, and AI Assistant context grounding.
 3. **ML Service (Python, FastAPI, XGBoost, SHAP)**: Provides predictions on cost/time overruns and explains them via SHAP feature importance.
 
 ## Key Features
@@ -32,18 +32,27 @@ To showcase the platform:
 
 ## Setup Instructions
 
+### Database Configuration
+- **Database Engine**: MySQL 8.0
+- **Database Name**: `infrawatchdb`
+- **Docker MySQL Host Access**: `localhost:3307`
+- **Docker Internal Database Address**: `db:3306`
+- **MySQL Workbench Connection**: Host `localhost`, Port `3307`
+
+*Note: H2 is no longer the production/application database. Both Docker deployment and local Spring Boot development use MySQL.*
+
 ### Option 1: Local Development
 1. **Frontend**: `cd frontend && npm install && npm run dev` (Runs on port 3000)
 2. **ML Service**: `cd ml-service && pip install -r requirements.txt && python main.py` (Runs on port 8000)
-3. **Backend**: `cd backend && mvn spring-boot:run` (Runs on port 8080)
+3. **Backend**: Ensure MySQL is running locally or via Docker on port 3307, then `cd backend && mvn spring-boot:run` (Runs on port 8080)
 
 ### Option 2: Docker Setup
 A complete `docker-compose.yml` is provided for production/demo deployment.
 ```bash
 # Ensure Docker is running
-docker-compose up --build
+docker compose up --build
 ```
-This will start MySQL (3306), Backend (8080), ML Service (8000), and Frontend (3000).
+This will start MySQL (mapped to host 3307), Backend (8080), ML Service (8000), and Frontend (3000).
 
 ## Environment Variables
 Review the `.env.example` in the root directory. Configure your `DB_PASSWORD` and `JWT_SECRET` accordingly before running Docker.

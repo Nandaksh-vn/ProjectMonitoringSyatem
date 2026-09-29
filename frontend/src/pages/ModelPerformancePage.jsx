@@ -9,8 +9,9 @@ import {
 } from 'recharts';
 
 const TOOLTIP_STYLE = {
-  backgroundColor: '#1e293b', border: '1px solid #334155',
-  borderRadius: 8, color: '#f1f5f9', fontSize: 12,
+  backgroundColor: '#ffffff', border: '1px solid #e2e8f0',
+  borderRadius: 4, color: '#0f172a', fontSize: 12,
+  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
 };
 
 // Hardcoded from real training results documented in model_comparison_report.md
@@ -22,7 +23,7 @@ const MODEL_DATA = [
   { model: 'XGBoost (Enhanced)', accuracy: 0.91, precision: 0.89, recall: 0.90, f1: 0.90, auc: 0.96, active: true },
 ];
 
-const COLORS = ['#64748b', '#818cf8', '#06b6d4', '#f59e0b', '#10b981'];
+const COLORS = ['#94a3b8', '#818cf8', '#0ea5e9', '#f59e0b', '#059669'];
 
 export default function ModelPerformancePage() {
   const [mlHealth, setMlHealth] = useState(null);
@@ -51,28 +52,29 @@ export default function ModelPerformancePage() {
   return (
     <AppLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-          <Cpu className="w-6 h-6 text-violet-400" />
+        <div className="text-xs font-semibold text-slate-500 mb-1 tracking-wide uppercase">Settings / Model Performance</div>
+        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <Cpu className="w-6 h-6 text-brand-600" />
           Model Performance
         </h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <p className="text-slate-600 text-sm mt-1">
           Real metrics from ML model training experiments — XGBoost Enhanced is the production model
         </p>
       </div>
 
       {/* ML Service status */}
-      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-6 border text-sm ${mlHealth ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-red-500/5 border-red-500/20 text-red-400'}`}>
-        <div className={`w-2 h-2 rounded-full ${mlHealth ? 'bg-emerald-400 pulse-glow' : 'bg-red-400'}`} />
-        ML Service: {mlLoading ? 'Checking...' : mlHealth ? `Online — ${mlHealth.model_loaded ? 'Model Loaded' : 'No model'}` : 'Offline'}
+      <div className={`flex items-center gap-3 px-4 py-3 rounded mb-6 border text-sm font-semibold ${mlHealth ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+        <div className={`w-3 h-3 rounded-full ${mlHealth ? 'bg-emerald-500 pulse-glow' : 'bg-red-500'}`} />
+        ML Engine Status: {mlLoading ? 'Checking...' : mlHealth ? `Online — ${mlHealth.model_loaded ? 'Model Loaded Successfully' : 'No model loaded'}` : 'Offline / Unavailable'}
       </div>
 
       {/* Metric cards for selected */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         {['accuracy', 'precision', 'recall', 'f1', 'auc'].map(k => (
-          <div key={k} className="bg-slate-900/70 border border-slate-800 rounded-xl p-4 text-center">
-            <p className="text-xs text-slate-400 uppercase mb-2">{k === 'auc' ? 'AUC-ROC' : k}</p>
-            <p className="text-2xl font-bold text-cyan-400">{(MODEL_DATA[selected][k] * 100).toFixed(1)}%</p>
-            <p className="text-xs text-slate-500 mt-1">{MODEL_DATA[selected].model}</p>
+          <div key={k} className="gov-card p-4 text-center">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">{k === 'auc' ? 'AUC-ROC' : k}</p>
+            <p className="text-3xl font-bold text-brand-700">{(MODEL_DATA[selected][k] * 100).toFixed(1)}%</p>
+            <p className="text-xs font-semibold text-slate-400 mt-2">{MODEL_DATA[selected].model}</p>
           </div>
         ))}
       </div>
@@ -80,38 +82,38 @@ export default function ModelPerformancePage() {
       {/* Charts row */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
         {/* Accuracy vs AUC bar chart */}
-        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-slate-200 mb-4">Model Accuracy vs AUC-ROC Comparison</h3>
+        <div className="gov-card p-5">
+          <h3 className="text-sm font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Model Accuracy vs AUC-ROC Comparison</h3>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={barData} barSize={14}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 9 }} />
-              <YAxis domain={[60, 100]} tick={{ fill: '#94a3b8', fontSize: 10 }} unit="%" />
-              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [`${v}%`]} />
-              <Legend formatter={(v) => <span className="text-xs text-slate-300">{v}</span>} />
-              <Bar dataKey="Accuracy" fill="#06b6d4" radius={[3, 3, 0, 0]}>
+            <BarChart data={barData} barSize={20} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} />
+              <YAxis domain={[60, 100]} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }} unit="%" axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [`${v}%`]} cursor={{ fill: '#f8fafc' }} />
+              <Legend formatter={(v) => <span className="text-xs font-semibold text-slate-700">{v}</span>} wrapperStyle={{ paddingTop: '10px' }} />
+              <Bar dataKey="Accuracy" fill="#3b82f6" radius={[2, 2, 0, 0]}>
                 {barData.map((entry, i) => (
-                  <Cell key={i} fill={entry.active ? '#10b981' : '#06b6d4'} />
+                  <Cell key={i} fill={entry.active ? '#059669' : '#3b82f6'} />
                 ))}
               </Bar>
-              <Bar dataKey="AUC" fill="#818cf8" radius={[3, 3, 0, 0]}>
+              <Bar dataKey="AUC" fill="#6366f1" radius={[2, 2, 0, 0]}>
                 {barData.map((entry, i) => (
-                  <Cell key={i} fill={entry.active ? '#34d399' : '#818cf8'} />
+                  <Cell key={i} fill={entry.active ? '#10b981' : '#6366f1'} />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-xs text-slate-500 mt-2 text-center">🟢 Green = Production model (XGBoost Enhanced)</p>
+          <p className="text-xs font-semibold text-slate-500 mt-2 text-center">🟢 Green = Production model (XGBoost Enhanced)</p>
         </div>
 
         {/* Radar chart */}
-        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-slate-200 mb-4">Multi-metric Radar Comparison</h3>
+        <div className="gov-card p-5">
+          <h3 className="text-sm font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Multi-metric Radar Comparison</h3>
           <ResponsiveContainer width="100%" height={280}>
             <RadarChart data={radarData}>
-              <PolarGrid stroke="#1e293b" />
-              <PolarAngleAxis dataKey="metric" tick={{ fill: '#94a3b8', fontSize: 10 }} />
-              <PolarRadiusAxis angle={30} domain={[60, 100]} tick={{ fill: '#64748b', fontSize: 8 }} />
+              <PolarGrid stroke="#e2e8f0" />
+              <PolarAngleAxis dataKey="metric" tick={{ fill: '#475569', fontSize: 10, fontWeight: 600 }} />
+              <PolarRadiusAxis angle={30} domain={[60, 100]} tick={{ fill: '#94a3b8', fontSize: 9 }} />
               {MODEL_DATA.map((m, i) => (
                 <Radar
                   key={m.model}
@@ -119,11 +121,11 @@ export default function ModelPerformancePage() {
                   dataKey={m.model.split(' ')[0]}
                   stroke={COLORS[i]}
                   fill={COLORS[i]}
-                  fillOpacity={m.active ? 0.2 : 0.05}
-                  strokeWidth={m.active ? 2 : 1}
+                  fillOpacity={m.active ? 0.3 : 0.05}
+                  strokeWidth={m.active ? 3 : 1}
                 />
               ))}
-              <Legend formatter={(v) => <span className="text-xs text-slate-300">{v}</span>} />
+              <Legend formatter={(v) => <span className="text-xs font-semibold text-slate-700">{v}</span>} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
             </RadarChart>
           </ResponsiveContainer>
@@ -131,16 +133,16 @@ export default function ModelPerformancePage() {
       </div>
 
       {/* Full comparison table */}
-      <div className="bg-slate-900/70 border border-slate-800 rounded-xl">
-        <div className="px-6 py-4 border-b border-slate-800">
-          <h3 className="text-sm font-semibold text-slate-200">Full Model Comparison</h3>
+      <div className="gov-card">
+        <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 rounded-t">
+          <h3 className="text-sm font-bold text-slate-800">Full Model Comparison</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-800">
+              <tr className="border-b border-slate-200 bg-white">
                 {['Model', 'Accuracy', 'Precision', 'Recall', 'F1 Score', 'AUC-ROC', 'Status'].map(h => (
-                  <th key={h} className="text-left text-xs text-slate-400 px-4 py-3 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="text-left text-xs font-bold text-slate-600 px-5 py-3 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -149,18 +151,18 @@ export default function ModelPerformancePage() {
                 <tr
                   key={m.model}
                   onClick={() => setSelected(i)}
-                  className={`border-b border-slate-800/50 cursor-pointer transition-colors ${selected === i ? 'bg-slate-800/60' : 'hover:bg-slate-800/30'} ${m.active ? 'border-l-2 border-l-emerald-400' : ''}`}
+                  className={`border-b border-slate-100 cursor-pointer transition-colors ${selected === i ? 'bg-slate-50' : 'hover:bg-slate-50/50'} ${m.active ? 'border-l-4 border-l-brand-600' : 'border-l-4 border-l-transparent'}`}
                 >
-                  <td className="px-4 py-3 font-medium text-slate-200">{m.model}</td>
+                  <td className="px-5 py-3 font-semibold text-slate-900">{m.model}</td>
                   {['accuracy', 'precision', 'recall', 'f1', 'auc'].map(k => (
-                    <td key={k} className={`px-4 py-3 font-mono text-sm ${m.active ? 'text-emerald-400' : 'text-slate-300'}`}>
+                    <td key={k} className={`px-5 py-3 font-mono font-bold text-sm ${m.active ? 'text-brand-600' : 'text-slate-700'}`}>
                       {(m[k] * 100).toFixed(1)}%
                     </td>
                   ))}
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-3">
                     {m.active
-                      ? <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">PRODUCTION</span>
-                      : <span className="text-xs text-slate-500">Retired</span>}
+                      ? <span className="text-xs font-bold text-brand-700 bg-brand-50 border border-brand-200 px-2 py-1 rounded uppercase">PRODUCTION</span>
+                      : <span className="text-xs font-bold text-slate-500 uppercase">Retired</span>}
                   </td>
                 </tr>
               ))}

@@ -7,12 +7,12 @@ spring:
   application:
     name: infrawatch-backend
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:infrawatchdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL}
-    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
-    username: ${SPRING_DATASOURCE_USERNAME:sa}
-    password: ${SPRING_DATASOURCE_PASSWORD:}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3307/infrawatchdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:com.mysql.cj.jdbc.Driver}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:root}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}
   jpa:
-    database-platform: ${SPRING_JPA_DIALECT:org.hibernate.dialect.H2Dialect}
+    database-platform: ${SPRING_JPA_DIALECT:org.hibernate.dialect.MySQLDialect}
     hibernate:
       ddl-auto: none
     defer-datasource-initialization: true

@@ -1,12 +1,13 @@
 package com.infrawatch.controller;
 
 import com.infrawatch.entity.*;
+import com.infrawatch.dto.ProjectDTO;
 import com.infrawatch.repository.*;
 import com.infrawatch.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class ProjectController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_PROJECT_MANAGER', 'ROLE_ANALYST', 'ROLE_VIEWER', 'ROLE_MONITOR')")
-    public ResponseEntity<Page<Project>> getAllProjects(
+    public ResponseEntity<Page<ProjectDTO>> getAllProjects(
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int size) {

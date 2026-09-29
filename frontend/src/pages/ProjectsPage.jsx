@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import AppLayout from '../components/layout/AppLayout';
 import { projectService } from '../services/api';
 import { LoadingState, ErrorState, RiskBadge, StatusBadge, ProgressBar } from '../components/ui/Shared';
-import { Search, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const PAGE_SIZE = 10;
@@ -85,30 +85,36 @@ export default function ProjectsPage() {
 
   return (
     <AppLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-100">Projects</h1>
-        <p className="text-slate-400 text-sm mt-1">All monitored infrastructure projects — {sorted.length} of {projects.length}</p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div className="text-xs font-semibold text-slate-500 mb-1 tracking-wide uppercase">Home / Projects</div>
+          <h1 className="text-2xl font-bold text-slate-900">Project Directory</h1>
+          <p className="text-slate-600 text-sm mt-1">All monitored infrastructure projects — {sorted.length} of {projects.length} results</p>
+        </div>
+        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50 transition-colors shadow-sm">
+          <Download className="w-4 h-4" /> Export Excel
+        </button>
       </div>
 
       {/* Search & Filters */}
-      <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-4 mb-6">
+      <div className="gov-card p-4 mb-6 bg-slate-50/50">
         <div className="flex flex-col lg:flex-row gap-3">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               id="project-search"
               placeholder="Search by name, code, state..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/60"
+              className="w-full bg-white border border-slate-300 rounded px-3 py-2 pl-9 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
             />
           </div>
 
           {/* Filters */}
           <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-4 h-4 text-slate-500" />
+            <Filter className="w-4 h-4 text-slate-400" />
             {[
               { key: 'risk', options: riskLevels, label: 'Risk' },
               { key: 'status', options: statuses, label: 'Status' },
@@ -119,7 +125,7 @@ export default function ProjectsPage() {
                 key={key}
                 value={filters[key]}
                 onChange={(e) => { setFilters(f => ({ ...f, [key]: e.target.value })); setPage(1); }}
-                className="bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500/60"
+                className="bg-white border border-slate-300 text-slate-700 text-sm rounded px-3 py-2 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               >
                 <option value="">All {label}</option>
                 {options.map(o => <option key={o} value={o}>{o}</option>)}
@@ -128,9 +134,9 @@ export default function ProjectsPage() {
             {(search || Object.values(filters).some(Boolean)) && (
               <button
                 onClick={() => { setSearch(''); setFilters({ risk: '', status: '', ministry: '', sector: '' }); setPage(1); }}
-                className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded border border-red-500/20 hover:border-red-400/40 transition-colors"
+                className="text-sm font-medium text-brand-600 hover:text-brand-800 px-3 py-2 rounded transition-colors"
               >
-                Clear
+                Clear Filters
               </button>
             )}
           </div>
@@ -138,13 +144,13 @@ export default function ProjectsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-slate-900/70 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="gov-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-950/50">
+              <tr className="border-b border-slate-200 bg-slate-50">
                 {[
-                  { label: 'Code', key: 'projectCode' },
+                  { label: 'Project ID', key: 'projectCode' },
                   { label: 'Project Name', key: 'projectName' },
                   { label: 'Ministry', key: 'ministryCode' },
                   { label: 'State', key: 'state' },
@@ -156,9 +162,9 @@ export default function ProjectsPage() {
                   <th
                     key={key}
                     onClick={() => handleSort(key)}
-                    className="text-left text-xs font-medium text-slate-400 px-4 py-3 uppercase tracking-wider cursor-pointer hover:text-slate-200 select-none"
+                    className="text-left text-xs font-bold text-slate-700 px-5 py-3 uppercase tracking-wide cursor-pointer hover:bg-slate-100 select-none"
                   >
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1.5">
                       {label} <SortIcon col={key} />
                     </span>
                   </th>
@@ -167,7 +173,7 @@ export default function ProjectsPage() {
             </thead>
             <tbody>
               {paginated.length === 0 && (
-                <tr><td colSpan={8} className="text-center py-16 text-slate-500">No projects match your criteria</td></tr>
+                <tr><td colSpan={8} className="text-center py-16 text-slate-500 font-medium">No projects match your criteria</td></tr>
               )}
               {paginated.map((p) => {
                 const riskLevel = p.riskLevel || p.predictions?.[0]?.riskLevel || 'LOW';
@@ -175,25 +181,25 @@ export default function ProjectsPage() {
                   <tr
                     key={p.id}
                     onClick={() => navigate(`/projects/${p.id}`)}
-                    className="border-b border-slate-800/50 hover:bg-slate-800/40 cursor-pointer transition-colors"
+                    className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors"
                   >
-                    <td className="px-4 py-3 font-mono text-xs text-slate-300">{p.projectCode}</td>
-                    <td className="px-4 py-3 text-slate-200 max-w-xs">
-                      <div className="truncate font-medium">{p.projectName}</div>
+                    <td className="px-5 py-3 font-mono text-xs font-medium text-slate-600">{p.projectCode}</td>
+                    <td className="px-5 py-3 text-slate-900 max-w-xs">
+                      <div className="truncate font-semibold">{p.projectName}</div>
                       <div className="text-xs text-slate-500 mt-0.5">{p.district}, {p.state}</div>
                     </td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{p.ministryCode || p.ministry?.code || '—'}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{p.state}</td>
-                    <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
-                    <td className="px-4 py-3 w-32">
-                      <div className="text-xs text-slate-300 mb-1">{p.physicalProgress?.toFixed(1) || 0}%</div>
+                    <td className="px-5 py-3 text-slate-600 text-xs">{p.ministryCode || p.ministry?.code || '—'}</td>
+                    <td className="px-5 py-3 text-slate-600 text-xs">{p.state}</td>
+                    <td className="px-5 py-3"><StatusBadge status={p.status} /></td>
+                    <td className="px-5 py-3 w-32">
+                      <div className="text-xs font-semibold text-slate-700 mb-1.5">{p.physicalProgress?.toFixed(1) || 0}%</div>
                       <ProgressBar
                         value={p.physicalProgress || 0}
                         color={riskLevel === 'LOW' ? 'emerald' : riskLevel === 'MEDIUM' ? 'amber' : 'red'}
                       />
                     </td>
-                    <td className="px-4 py-3"><RiskBadge level={riskLevel} /></td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-300">
+                    <td className="px-5 py-3"><RiskBadge level={riskLevel} /></td>
+                    <td className="px-5 py-3 font-mono text-xs font-semibold text-slate-700">
                       {p.revisedCost ? `₹${p.revisedCost.toLocaleString('en-IN')}` : '—'}
                     </td>
                   </tr>
@@ -205,15 +211,15 @@ export default function ProjectsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800">
-            <p className="text-xs text-slate-400">
-              Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, sorted.length)} of {sorted.length}
+          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50">
+            <p className="text-sm text-slate-600">
+              Showing <span className="font-semibold text-slate-900">{(page - 1) * PAGE_SIZE + 1}</span> to <span className="font-semibold text-slate-900">{Math.min(page * PAGE_SIZE, sorted.length)}</span> of <span className="font-semibold text-slate-900">{sorted.length}</span> results
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-1.5 rounded-lg bg-slate-800 disabled:opacity-40 hover:bg-slate-700 transition-colors text-slate-300"
+                className="p-1.5 rounded bg-white border border-slate-300 disabled:opacity-50 hover:bg-slate-50 transition-colors text-slate-600"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -224,7 +230,7 @@ export default function ProjectsPage() {
                   <button
                     key={pg}
                     onClick={() => setPage(pg)}
-                    className={`w-8 h-8 text-xs rounded-lg transition-colors ${pg === page ? 'bg-cyan-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                    className={`w-8 h-8 text-sm rounded font-medium transition-colors border ${pg === page ? 'bg-brand-600 text-white border-brand-600' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'}`}
                   >
                     {pg}
                   </button>
@@ -233,7 +239,7 @@ export default function ProjectsPage() {
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="p-1.5 rounded-lg bg-slate-800 disabled:opacity-40 hover:bg-slate-700 transition-colors text-slate-300"
+                className="p-1.5 rounded bg-white border border-slate-300 disabled:opacity-50 hover:bg-slate-50 transition-colors text-slate-600"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
