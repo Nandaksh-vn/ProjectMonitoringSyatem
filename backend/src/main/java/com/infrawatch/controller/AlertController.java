@@ -3,7 +3,6 @@ package com.infrawatch.controller;
 import com.infrawatch.entity.Alert;
 import com.infrawatch.repository.AlertRepository;
 import com.infrawatch.service.RecommendationEngineService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,11 +13,15 @@ import java.util.List;
 @RequestMapping("/v1/alerts")
 public class AlertController {
 
-    @Autowired
-    private AlertRepository alertRepository;
+    public AlertController(AlertRepository alertRepository, RecommendationEngineService recommendationEngineService) {
+        this.alertRepository = alertRepository;
+        this.recommendationEngineService = recommendationEngineService;
+    }
 
-    @Autowired
-    private RecommendationEngineService recommendationEngineService;
+
+    private final AlertRepository alertRepository;
+
+    private final RecommendationEngineService recommendationEngineService;
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_PROJECT_MANAGER', 'ROLE_ANALYST', 'ROLE_VIEWER', 'ROLE_MONITOR')")

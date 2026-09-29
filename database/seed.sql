@@ -5,7 +5,7 @@
 -- It does not represent official MoSPI or PAIMANA project figures.
 -- ============================================================
 
-USE infrawatch_db;
+USE infrawatchdb;
 
 -- 1. Roles
 INSERT INTO roles (id, name, description) VALUES
@@ -16,9 +16,9 @@ INSERT INTO roles (id, name, description) VALUES
 
 -- 2. Users (Password: Admin@123 hashed or standard placeholder)
 INSERT INTO users (id, username, password, full_name, email, department, role_id, is_active) VALUES
-(1, 'admin', '$2a$10$e8W/2s1Y7P7A/R6c5.vJ8eTfN.b9w3u8vXy4z7w6v5u4t3s2r1q0P', 'System Administrator', 'admin@infrawatch.gov.in', 'IPMD MoSPI', 1, TRUE),
-(2, 'monitor_user', '$2a$10$e8W/2s1Y7P7A/R6c5.vJ8eTfN.b9w3u8vXy4z7w6v5u4t3s2r1q0P', 'Rajesh Sharma', 'rajesh.sharma@morth.gov.in', 'Ministry of Road Transport', 2, TRUE),
-(3, 'analyst_user', '$2a$10$e8W/2s1Y7P7A/R6c5.vJ8eTfN.b9w3u8vXy4z7w6v5u4t3s2r1q0P', 'Dr. Ananya Verma', 'ananya.verma@infrawatch.gov.in', 'Data Analytics Cell', 3, TRUE);
+(1, 'admin', '$2b$12$5ixEuClmw5dSIZwI5eslre05bZ1KRVGBw2zsdswanfpoJRpkxYwyC', 'System Administrator', 'admin@infrawatch.gov.in', 'IPMD MoSPI', 1, TRUE),
+(2, 'monitor_user', '$2b$12$5ixEuClmw5dSIZwI5eslre05bZ1KRVGBw2zsdswanfpoJRpkxYwyC', 'Rajesh Sharma', 'rajesh.sharma@morth.gov.in', 'Ministry of Road Transport', 2, TRUE),
+(3, 'analyst_user', '$2b$12$5ixEuClmw5dSIZwI5eslre05bZ1KRVGBw2zsdswanfpoJRpkxYwyC', 'Dr. Ananya Verma', 'ananya.verma@infrawatch.gov.in', 'Data Analytics Cell', 3, TRUE);
 
 -- 3. Ministries
 INSERT INTO ministries (id, code, name, description) VALUES

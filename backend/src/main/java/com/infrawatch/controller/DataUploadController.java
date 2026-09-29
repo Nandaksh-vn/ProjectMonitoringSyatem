@@ -1,133 +1,80 @@
 package com.infrawatch.controller;
 
+import com.infrawatch.service.DataImportService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.Map;
-import java.util.HashMap;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.List;
-import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/v1/data/upload")
 public class DataUploadController {
 
+    private final DataImportService dataImportService;
+
+    public DataUploadController(DataImportService dataImportService) {
+        this.dataImportService = dataImportService;
+    }
+
     @PostMapping("/monthly-data")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MONITOR')")
-    public ResponseEntity<?> uploadMonthlyData(@RequestParam("file") MultipartFile file, @RequestParam(value = "projectId", required = false) String projectId) {
+    public ResponseEntity<?> uploadMonthlyData(@RequestParam("file") MultipartFile file,
+                                               @RequestParam(value = "projectId", required = false) Long projectId,
+                                               @RequestParam(value = "dryRun", defaultValue = "false") boolean dryRun) {
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "File format is invalid or empty."));
+            return ResponseEntity.badRequest().body(Map.of("status", "FAILED",
+                    "message", "File is empty.", "validationErrors", java.util.List.of("No file content received.")));
         }
-        
-        if (projectId == null || projectId.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Validation failed", "validationErrors", List.of("Project ID is missing. You must select a project.")));
+        if (projectId == null) {
+            return ResponseEntity.badRequest().body(Map.of("status", "FAILED",
+                    "message", "Validation failed",
+                    "validationErrors", java.util.List.of("Project ID is required. Select the project this file belongs to.")));
         }
-
-        List<String> errors = new ArrayList<>();
-        int rowsProcessed = 0;
-        int rowsInserted = 0;
-        
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            String header = br.readLine();
-            if (header == null || !header.contains("project_id")) {
-                errors.add("Missing required column: project_id");
-            }
-            
-            String line;
-            while ((line = br.readLine()) != null) {
-                rowsProcessed++;
-                String[] values = line.split(",");
-                if (values.length > 0) {
-                    String rowProjectId = values[0].trim();
-                    if (!rowProjectId.equals(projectId)) {
-                        errors.add("Row " + rowsProcessed + ": CSV contains project ID '" + rowProjectId + "' which does not match the selected project ID '" + projectId + "'. Multiple projects in one upload is not permitted here.");
-                    } else {
-                        rowsInserted++;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Failed to parse CSV: " + e.getMessage()));
-        }
-
-        if (!errors.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "message", "Validation failed during file processing.",
-                "validationErrors", errors
-            ));
-        }
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Monthly progress data validated and uploaded successfully.");
-        response.put("fileName", file.getOriginalFilename());
-        response.put("rowsImported", rowsInserted);
-        response.put("recordsProcessed", rowsProcessed);
-        response.put("recordsInserted", rowsInserted);
-        response.put("recordsUpdated", 0);
-        response.put("recordsRejected", 0);
-        return ResponseEntity.ok(response);
+        Map<String, Object> result = dataImportService.importMonthlyData(file, projectId, dryRun);
+        return "COMPLETED".equals(result.get("status")) ? ResponseEntity.ok(result) : ResponseEntity.badRequest().body(result);
     }
 
     @PostMapping("/projects")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
-    public ResponseEntity<?> uploadProjectsData(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadProjectsData(@RequestParam("file") MultipartFile file,
+                                                @RequestParam(value = "dryRun", defaultValue = "false") boolean dryRun) {
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "File format is invalid or empty."));
+            return ResponseEntity.badRequest().body(Map.of("status", "FAILED",
+                    "message", "File is empty.", "validationErrors", java.util.List.of("No file content received.")));
         }
-        
-        int rowsProcessed = 0;
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            String header = br.readLine();
-            String line;
-            while ((line = br.readLine()) != null) {
-                rowsProcessed++;
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Failed to parse CSV: " + e.getMessage()));
-        }
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Project master data validated and uploaded successfully.");
-        response.put("rowsImported", rowsProcessed);
-        response.put("recordsProcessed", rowsProcessed);
-        response.put("recordsInserted", rowsProcessed);
-        response.put("recordsUpdated", 0);
-        response.put("recordsRejected", 0);
-        return ResponseEntity.ok(response);
+        Map<String, Object> result = dataImportService.importProjects(file, dryRun);
+        return "COMPLETED".equals(result.get("status")) ? ResponseEntity.ok(result) : ResponseEntity.badRequest().body(result);
     }
 
     @PostMapping("/predictions")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
-    public ResponseEntity<?> uploadPredictionsData(@RequestParam("file") MultipartFile file, @RequestParam(value = "projectId", required = false) String projectId) {
+    public ResponseEntity<?> uploadPredictionsData(@RequestParam("file") MultipartFile file,
+                                                  @RequestParam(value = "projectId", required = false) Long projectId,
+                                                  @RequestParam(value = "dryRun", defaultValue = "false") boolean dryRun) {
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "File format is invalid or empty."));
+            return ResponseEntity.badRequest().body(Map.of("status", "FAILED",
+                    "message", "File is empty.", "validationErrors", java.util.List.of("No file content received.")));
         }
-        
-        if (projectId == null || projectId.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Validation failed", "validationErrors", List.of("Project ID is missing. You must select a project.")));
-        }
-        
-        int rowsProcessed = 0;
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            String header = br.readLine();
-            String line;
-            while ((line = br.readLine()) != null) {
-                rowsProcessed++;
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Failed to parse CSV: " + e.getMessage()));
-        }
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "ML prediction data uploaded successfully.");
-        response.put("rowsImported", rowsProcessed);
-        response.put("recordsProcessed", rowsProcessed);
-        response.put("recordsInserted", rowsProcessed);
-        response.put("recordsUpdated", 0);
-        response.put("recordsRejected", 0);
-        return ResponseEntity.ok(response);
+        Map<String, Object> result = dataImportService.importPredictions(file, projectId, dryRun);
+        return "COMPLETED".equals(result.get("status")) ? ResponseEntity.ok(result) : ResponseEntity.badRequest().body(result);
+    }
+
+    /** Column contract for each import type, so the UI can offer a template. */
+    @GetMapping("/template")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MONITOR', 'ROLE_PROJECT_MANAGER', 'ROLE_ANALYST')")
+    public ResponseEntity<?> getTemplate() {
+        return ResponseEntity.ok(Map.of(
+                "columns", dataImportService.columnTemplates(),
+                "notes", java.util.List.of(
+                        "Headers are matched case-insensitively and may use spaces, hyphens or camelCase instead of underscores.",
+                        "Dates accept yyyy-mm-dd, dd-mm-yyyy and d-m-yyyy.",
+                        "Amounts are INR crore; progress columns are percentages from 0 to 100.",
+                        "Send dryRun=true to validate without writing any rows.")));
     }
 }

@@ -1,4 +1,6 @@
-"""
-InfraWatch ML Service Package
-"""
-__version__ = "1.0.0"
+"""InfraWatch AI ML Service."""
+
+from app.config import API_VERSION, MODEL_VERSION
+
+__version__ = API_VERSION
+__model_version__ = MODEL_VERSION

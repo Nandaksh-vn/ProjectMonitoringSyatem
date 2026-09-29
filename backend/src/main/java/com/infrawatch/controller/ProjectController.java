@@ -4,7 +4,6 @@ import com.infrawatch.entity.*;
 import com.infrawatch.dto.ProjectDTO;
 import com.infrawatch.repository.*;
 import com.infrawatch.service.ProjectService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -18,13 +17,24 @@ import java.util.List;
 @RequestMapping("/v1/projects")
 public class ProjectController {
 
-    @Autowired private ProjectService projectService;
-    @Autowired private RecommendationRepository recommendationRepository;
-    @Autowired private RiskFactorRepository riskFactorRepository;
-    @Autowired private ProjectMonthlyDataRepository monthlyDataRepository;
-    @Autowired private MilestoneRepository milestoneRepository;
-    @Autowired private PredictionRepository predictionRepository;
-    @Autowired private AlertRepository alertRepository;
+    public ProjectController(ProjectService projectService, RecommendationRepository recommendationRepository, RiskFactorRepository riskFactorRepository, ProjectMonthlyDataRepository monthlyDataRepository, MilestoneRepository milestoneRepository, PredictionRepository predictionRepository, AlertRepository alertRepository) {
+        this.projectService = projectService;
+        this.recommendationRepository = recommendationRepository;
+        this.riskFactorRepository = riskFactorRepository;
+        this.monthlyDataRepository = monthlyDataRepository;
+        this.milestoneRepository = milestoneRepository;
+        this.predictionRepository = predictionRepository;
+        this.alertRepository = alertRepository;
+    }
+
+
+    private final ProjectService projectService;
+    private final RecommendationRepository recommendationRepository;
+    private final RiskFactorRepository riskFactorRepository;
+    private final ProjectMonthlyDataRepository monthlyDataRepository;
+    private final MilestoneRepository milestoneRepository;
+    private final PredictionRepository predictionRepository;
+    private final AlertRepository alertRepository;
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_PROJECT_MANAGER', 'ROLE_ANALYST', 'ROLE_VIEWER', 'ROLE_MONITOR')")
@@ -77,7 +87,7 @@ public class ProjectController {
     @GetMapping("/{id}/risk-factors")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_PROJECT_MANAGER', 'ROLE_ANALYST', 'ROLE_VIEWER', 'ROLE_MONITOR')")
     public ResponseEntity<List<RiskFactor>> getProjectRiskFactors(@PathVariable Long id) {
-        return ResponseEntity.ok(riskFactorRepository.findByProjectId(id));
+        return ResponseEntity.ok(riskFactorRepository.findLatestByProjectId(id));
     }
 
     @PostMapping

@@ -2,7 +2,6 @@ package com.infrawatch.controller;
 
 import com.infrawatch.repository.ProjectRepository;
 import com.infrawatch.repository.AlertRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,11 +15,15 @@ import java.util.Map;
 @RequestMapping("/v1/dashboard")
 public class DashboardController {
 
-    @Autowired
-    private ProjectRepository projectRepository;
+    public DashboardController(ProjectRepository projectRepository, AlertRepository alertRepository) {
+        this.projectRepository = projectRepository;
+        this.alertRepository = alertRepository;
+    }
 
-    @Autowired
-    private AlertRepository alertRepository;
+
+    private final ProjectRepository projectRepository;
+
+    private final AlertRepository alertRepository;
 
     @GetMapping("/summary")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_PROJECT_MANAGER', 'ROLE_ANALYST', 'ROLE_VIEWER')")

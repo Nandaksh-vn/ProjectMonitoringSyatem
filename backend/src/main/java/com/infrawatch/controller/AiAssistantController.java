@@ -3,7 +3,6 @@ package com.infrawatch.controller;
 import com.infrawatch.dto.ChatRequest;
 import com.infrawatch.dto.ChatResponse;
 import com.infrawatch.service.AiAssistantService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,8 +11,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/v1/assistant")
 public class AiAssistantController {
 
-    @Autowired
-    private AiAssistantService aiAssistantService;
+    public AiAssistantController(AiAssistantService aiAssistantService) {
+        this.aiAssistantService = aiAssistantService;
+    }
+
+
+    private final AiAssistantService aiAssistantService;
 
     @PostMapping("/chat")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_PROJECT_MANAGER', 'ROLE_ANALYST', 'ROLE_VIEWER', 'ROLE_MONITOR')")

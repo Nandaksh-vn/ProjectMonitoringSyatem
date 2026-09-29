@@ -1,15 +1,20 @@
-import React, { useState, useCallback } from 'react';
-import { Upload, FileText, CheckCircle2, XCircle, AlertTriangle, Info, Download } from 'lucide-react';
-import api from '../services/api';
-
-const ACCEPTED_TYPES = ['text/csv', 'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+import React, { useState, useCallback, useEffect } from 'react';
+import { Upload, FileText, CheckCircle2, XCircle, AlertTriangle, Info, Download, FlaskConical, Loader2 } from 'lucide-react';
+import { uploadService, projectService } from '../services/api';
 
 const UPLOAD_TYPES = [
-  { id: 'monthly-data', label: 'Monthly Progress Data', endpoint: '/data/upload/monthly-data', description: 'CSV with monthly physical/financial progress, expenditure, milestones' },
-  { id: 'project-data', label: 'Project Master Data', endpoint: '/data/upload/projects', description: 'CSV with project details, costs, dates, status' },
-  { id: 'prediction-data', label: 'ML Predictions', endpoint: '/data/upload/predictions', description: 'CSV with ML model prediction outputs' },
+  { id: 'monthly-data', label: 'Monthly Progress Data', templateKey: 'monthly-data',
+    needsProject: true,
+    description: 'CSV with monthly physical/financial progress, expenditure, milestones' },
+  { id: 'project-data', label: 'Project Master Data', templateKey: 'projects',
+    needsProject: false,
+    description: 'CSV with project details, costs, dates, status' },
+  { id: 'prediction-data', label: 'ML Predictions', templateKey: 'predictions',
+    needsProject: false,
+    description: 'CSV with ML model prediction outputs' },
 ];
+
+const MAX_BYTES = 10 * 1024 * 1024;
 
 function DropZone({ onFiles, disabled }) {
   const [dragging, setDragging] = useState(false);
@@ -33,12 +38,12 @@ function DropZone({ onFiles, disabled }) {
         <Upload className={`w-8 h-8 ${dragging ? 'text-brand-600' : 'text-slate-500'}`} />
       </div>
       <div className="text-center">
-        <p className="text-sm font-bold text-slate-700">Drop CSV/Excel file here or <span className="text-brand-600 underline">browse</span></p>
-        <p className="text-xs font-medium text-slate-500 mt-2">Supports .csv, .xlsx, .xls — Max 10 MB per file</p>
+        <p className="text-sm font-bold text-slate-700">Drop a CSV file here or <span className="text-brand-600 underline">browse</span></p>
+        <p className="text-xs font-medium text-slate-500 mt-2">One .csv file per upload, max 10 MB</p>
       </div>
       <input
         type="file"
-        accept=".csv,.xlsx,.xls"
+        accept=".csv,text/csv"
         className="hidden"
         disabled={disabled}
         onChange={(e) => onFiles(Array.from(e.target.files))}
@@ -56,42 +61,85 @@ export default function DataUploadPage() {
 
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [dryRun, setDryRun] = useState(false);
+  const [template, setTemplate] = useState(null);
+  const [templateLoading, setTemplateLoading] = useState(true);
 
-  // Fetch projects on load
-  React.useEffect(() => {
-    api.get('/projects?size=200')
+  useEffect(() => {
+    projectService.getAll()
       .then(r => setProjects(r.data?.content || r.data || []))
       .catch(e => console.error('Failed to load projects', e));
   }, []);
 
+  // Column contract comes from the backend so the guide cannot drift from the parser.
+  useEffect(() => {
+    setTemplateLoading(true);
+    uploadService.getTemplate()
+      .then(r => setTemplate(r.data))
+      .catch(() => setTemplate(null))
+      .finally(() => setTemplateLoading(false));
+  }, []);
+
+  const columns = template?.columns?.[uploadType.templateKey] ?? [];
+
+  const downloadTemplate = () => {
+    if (!columns.length) return;
+    const header = columns.join(',');
+    const sample = columns.map(() => '').join(',');
+    const blob = new Blob([`${header}\n${sample}\n`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `infrawatch-${uploadType.templateKey}-template.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleFiles = (newFiles) => {
-    const valid = newFiles.filter(f => ACCEPTED_TYPES.includes(f.type) || f.name.endsWith('.csv') || f.name.endsWith('.xlsx'));
-    const invalid = newFiles.filter(f => !valid.includes(f));
-    setFiles(valid);
-    setValidationErrors(invalid.map(f => `${f.name}: Unsupported file type. Only CSV/Excel accepted.`));
+    if (newFiles.length > 1) {
+      setFiles([]);
+      setValidationErrors(['Upload one file at a time so a rejected row can be traced to a single source.']);
+      setStatus(null);
+      setResult(null);
+      return;
+    }
+    const file = newFiles[0];
+    const errors = [];
+    if (!file) errors.push('No file selected.');
+    else {
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        errors.push(`${file.name}: only .csv is supported. Save the spreadsheet as CSV and retry.`);
+      }
+      if (file.size > MAX_BYTES) {
+        errors.push(`${file.name}: ${(file.size / 1024 / 1024).toFixed(1)} MB exceeds the 10 MB limit.`);
+      }
+    }
+    setValidationErrors(errors);
+    setFiles(errors.length ? [] : [file]);
     setStatus(null);
     setResult(null);
   };
 
   const handleUpload = async () => {
     if (!files.length) return;
-    if (uploadType.id !== 'project-data' && !selectedProjectId) {
-      setValidationErrors(['Please select a project before uploading this data type.']);
+    if (uploadType.needsProject && !selectedProjectId) {
+      setValidationErrors(['Select the project this data belongs to before uploading.']);
       return;
     }
-    
+
     setStatus('uploading');
     setResult(null);
     setValidationErrors([]);
 
-    const formData = new FormData();
-    files.forEach(f => formData.append('file', f));
-    if (selectedProjectId && uploadType.id !== 'project-data') {
-      formData.append('projectId', selectedProjectId);
-    }
-
     try {
-      const res = await api.post(uploadType.endpoint, formData); // Removed explicit Content-Type to preserve boundary
+      let res;
+      if (uploadType.id === 'project-data') {
+        res = await uploadService.uploadProjects(files[0], dryRun);
+      } else if (uploadType.id === 'prediction-data') {
+        res = await uploadService.uploadPredictions(files[0], selectedProjectId || null, dryRun);
+      } else {
+        res = await uploadService.uploadMonthlyData(files[0], selectedProjectId, dryRun);
+      }
       setStatus('success');
       setResult(res.data);
     } catch (err) {
@@ -113,9 +161,13 @@ export default function DataUploadPage() {
             <Upload className="w-6 h-6 text-brand-600" />
             Bulk Data Upload
           </h1>
-          <p className="text-slate-600 text-sm mt-1">Upload project monitoring data CSV/Excel files for batch processing</p>
+          <p className="text-slate-600 text-sm mt-1">Import project monitoring data from CSV</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50 transition-colors shadow-sm">
+        <button
+          onClick={downloadTemplate}
+          disabled={!columns.length}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-semibold rounded hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Download className="w-4 h-4" /> Download Template
         </button>
       </div>
@@ -149,7 +201,7 @@ export default function DataUploadPage() {
           </div>
           
           {/* Project Selection */}
-          {uploadType.id !== 'project-data' && (
+          {uploadType.needsProject && (
             <div className="bg-white border border-slate-200 rounded p-4 shadow-sm">
               <h3 className="text-sm font-bold text-slate-800 mb-2">Select Project *</h3>
               <p className="text-xs text-slate-500 mb-3">You must select a project to attach this data to.</p>
@@ -168,15 +220,17 @@ export default function DataUploadPage() {
 
           {/* Format guide */}
           <div className="bg-slate-50 border border-slate-200 rounded p-4 mt-6">
-            <h3 className="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide flex items-center gap-1.5"><FileText className="w-4 h-4" /> Expected Format</h3>
-            <p className="text-xs text-slate-600 font-mono leading-relaxed">
-              {uploadType.id === 'monthly-data' &&
-                'project_id, reporting_month, planned_physical_progress, actual_physical_progress, planned_financial_progress, actual_financial_progress, monthly_expenditure, cumulative_expenditure, milestones_planned, milestones_completed, milestones_delayed, revised_cost, revised_completion_date'}
-              {uploadType.id === 'project-data' &&
-                'project_code, project_name, ministry_id, sector_id, agency_id, state, district, approved_cost, revised_cost, approval_date, original_start_date, original_completion_date, status'}
-              {uploadType.id === 'prediction-data' &&
-                'project_id, model_version_id, cost_overrun_probability, predicted_cost_overrun_pct, time_overrun_probability, predicted_delay_months, overall_risk_score, risk_level'}
-            </p>
+            <h3 className="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide flex items-center gap-1.5"><FileText className="w-4 h-4" /> Expected Columns</h3>
+            {templateLoading ? (
+              <p className="text-xs text-slate-500 flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin"/> Loading column contract…</p>
+            ) : columns.length ? (
+              <>
+                <p className="text-xs text-slate-600 font-mono leading-relaxed break-all">{columns.join(', ')}</p>
+                <p className="text-[11px] text-slate-500 mt-2">Headers are matched case-insensitively and common aliases are accepted. Missing required columns are rejected before any row is written.</p>
+              </>
+            ) : (
+              <p className="text-xs text-red-600">Could not load the column contract from the server.</p>
+            )}
           </div>
         </div>
 
@@ -216,30 +270,59 @@ export default function DataUploadPage() {
               </div>
             )}
 
+            {/* Dry run toggle */}
+            <label className="mt-4 flex items-start gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded cursor-pointer">
+              <input
+                type="checkbox"
+                checked={dryRun}
+                onChange={(e) => setDryRun(e.target.checked)}
+                className="mt-1 w-4 h-4 accent-amber-600"
+              />
+              <span>
+                <span className="text-sm font-bold text-amber-900 flex items-center gap-1.5">
+                  <FlaskConical className="w-4 h-4"/> Dry run (validate only)
+                </span>
+                <span className="text-xs text-amber-800 block mt-0.5">
+                  Parses and validates every row, reports what would be inserted or updated, and writes nothing.
+                  Use this first on any new file format.
+                </span>
+              </span>
+            </label>
+
             {/* Upload button */}
             <div className="mt-6">
               <button
                 id="upload-btn"
                 onClick={handleUpload}
-                disabled={!files.length || status === 'uploading'}
-                className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold py-3 rounded transition-colors text-sm shadow-sm"
+                disabled={!files.length || status === 'uploading' || (uploadType.needsProject && !selectedProjectId)}
+                className={`w-full flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold py-3 rounded transition-colors text-sm shadow-sm ${
+                  dryRun ? 'bg-amber-600 hover:bg-amber-700' : 'bg-brand-600 hover:bg-brand-700'
+                }`}
               >
                 {status === 'uploading'
-                  ? <><div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" /> Processing & Validating Upload...</>
-                  : <><Upload className="w-4 h-4" /> Secure Upload & Validate</>}
+                  ? <><div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" /> Processing &amp; Validating…</>
+                  : dryRun
+                    ? <><FlaskConical className="w-4 h-4" /> Validate Without Writing</>
+                    : <><Upload className="w-4 h-4" /> Secure Upload &amp; Validate</>}
               </button>
             </div>
             
             {/* Result */}
             {status === 'success' && (
-              <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded text-emerald-900 shadow-sm">
+              <div className={`mt-4 p-4 border rounded shadow-sm ${
+                result?.dryRun || dryRun ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+              }`}>
                 <div className="flex items-start gap-3 mb-3">
-                  <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600" />
+                  {result?.dryRun || dryRun
+                    ? <FlaskConical className="w-5 h-5 shrink-0 mt-0.5 text-amber-600"/>
+                    : <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600"/>}
                   <div>
-                    <p className="font-bold text-sm text-emerald-800">Upload Successful</p>
-                    <p className="text-sm mt-1 font-medium">{result?.message || 'Data validated and imported successfully.'}</p>
-                    {uploadType.id !== 'project-data' && (
-                      <p className="text-sm font-bold mt-1 text-emerald-700">Project: {projects.find(p => p.id.toString() === selectedProjectId.toString())?.projectName || selectedProjectId}</p>
+                    <p className={`font-bold text-sm ${result?.dryRun || dryRun ? 'text-amber-800' : 'text-emerald-800'}`}>
+                      {result?.dryRun || dryRun ? 'Dry run complete — nothing was written' : 'Upload Successful'}
+                    </p>
+                    <p className="text-sm mt-1 font-medium">{result?.message || (dryRun ? 'Validated with no changes written.' : 'Data validated and imported successfully.')}</p>
+                    {uploadType.needsProject && (
+                      <p className="text-sm font-bold mt-1 text-emerald-700">Project: {projects.find(p => String(p.id) === String(selectedProjectId))?.projectName || selectedProjectId}</p>
                     )}
                   </div>
                 </div>

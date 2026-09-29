@@ -236,7 +236,7 @@ export default function ProjectsPage() {
                         <button onClick={() => navigate(`/projects/${p.id}`)} title="View Detail" className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors"><Eye className="w-4 h-4" /></button>
                         <button onClick={() => navigate(`/risk-analytics?projectId=${p.id}`)} title="Analyze" className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"><Activity className="w-4 h-4" /></button>
                         {canManage && (
-                          <button onClick={() => navigate(`/projects/${p.id}/edit`)} title="Edit" className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-200 rounded transition-colors"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => navigate(`/projects/${p.id}/edit`)} title="Edit Progress" className="p-1.5 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors"><Edit2 className="w-4 h-4" /></button>
                         )}
                       </div>
                     </td>

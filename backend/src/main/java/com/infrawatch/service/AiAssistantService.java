@@ -4,7 +4,6 @@ import com.infrawatch.dto.ChatRequest;
 import com.infrawatch.dto.ChatResponse;
 import com.infrawatch.entity.*;
 import com.infrawatch.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -13,23 +12,27 @@ import java.util.List;
 @Service
 public class AiAssistantService {
 
-    @Autowired
-    private ProjectRepository projectRepository;
+    public AiAssistantService(ProjectRepository projectRepository, PredictionRepository predictionRepository, RiskFactorRepository riskFactorRepository, RecommendationRepository recommendationRepository, AlertRepository alertRepository, MilestoneRepository milestoneRepository) {
+        this.projectRepository = projectRepository;
+        this.predictionRepository = predictionRepository;
+        this.riskFactorRepository = riskFactorRepository;
+        this.recommendationRepository = recommendationRepository;
+        this.alertRepository = alertRepository;
+        this.milestoneRepository = milestoneRepository;
+    }
 
-    @Autowired
-    private PredictionRepository predictionRepository;
 
-    @Autowired
-    private RiskFactorRepository riskFactorRepository;
+    private final ProjectRepository projectRepository;
 
-    @Autowired
-    private RecommendationRepository recommendationRepository;
+    private final PredictionRepository predictionRepository;
 
-    @Autowired
-    private AlertRepository alertRepository;
+    private final RiskFactorRepository riskFactorRepository;
+
+    private final RecommendationRepository recommendationRepository;
+
+    private final AlertRepository alertRepository;
     
-    @Autowired
-    private MilestoneRepository milestoneRepository;
+    private final MilestoneRepository milestoneRepository;
 
     public ChatResponse processChat(ChatRequest request) {
         String msg = request.getMessage().toLowerCase();
@@ -110,7 +113,7 @@ public class AiAssistantService {
         Prediction latestPrediction = predictions.isEmpty() ? null : predictions.get(0);
         
         List<RiskFactor> riskFactors = latestPrediction != null ? riskFactorRepository.findByPredictionId(latestPrediction.getId()) : List.of();
-        List<Alert> alerts = alertRepository.findByProjectId(project.getId());
+        alertRepository.findByProjectId(project.getId());
         List<Recommendation> recommendations = recommendationRepository.findByProjectId(project.getId());
         List<Milestone> milestones = milestoneRepository.findByProjectId(project.getId());
 

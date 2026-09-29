@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { projectService } from '../services/api';
+import { projectService, referenceService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function AddProjectPage() {
@@ -8,23 +8,12 @@ export default function AddProjectPage() {
   const { user } = useAuth();
   const canManage = user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_PROJECT_MANAGER';
 
-  // Prevent non-admins from loading the form
-  if (!canManage) {
-    return (
-      <div className="bg-white p-8 rounded border border-slate-200 text-center">
-        <h2 className="text-xl font-bold text-slate-800 mb-2">Access Denied</h2>
-        <p className="text-slate-600 mb-6">You do not have permission to create new projects.</p>
-        <button onClick={() => navigate('/projects')} className="bg-brand-600 text-white px-4 py-2 rounded font-medium hover:bg-brand-700">Back to Projects</button>
-      </div>
-    );
-  }
-
   const [formData, setFormData] = useState({
     projectCode: '',
     projectName: '',
-    ministryId: '1',
-    sectorId: '1',
-    agencyId: '1',
+    ministryId: '',
+    sectorId: '',
+    agencyId: '',
     state: '',
     district: '',
     approvedCost: '',
@@ -35,9 +24,65 @@ export default function AddProjectPage() {
     status: 'ONGOING'
   });
 
+  const [ministries, setMinistries] = useState([]);
+  const [sectors, setSectors] = useState([]);
+  const [agencies, setAgencies] = useState([]);
+  const [referenceLoading, setReferenceLoading] = useState(true);
+  const [referenceError, setReferenceError] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Reference lists come from the database so agency renames and additions are
+  // reflected without a frontend release.
+  useEffect(() => {
+    if (!canManage) return;
+    let cancelled = false;
+    referenceService
+      .getAll()
+      .then(r => {
+        if (cancelled) return;
+        setMinistries(r.data?.ministries || []);
+        setSectors(r.data?.sectors || []);
+        setAgencies(r.data?.agencies || []);
+        setReferenceError('');
+      })
+      .catch(e => {
+        if (cancelled) return;
+        setReferenceError(
+          e.response?.data?.message || 'Could not load ministries, sectors and agencies from the server.'
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setReferenceLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [canManage]);
+
+  // An agency belongs to exactly one ministry, so keep the two dropdowns consistent.
+  const handleMinistryChange = (e) => {
+    const ministryId = e.target.value;
+    setFormData(prev => ({ ...prev, ministryId, agencyId: '' }));
+  };
+
+  const visibleAgencies = formData.ministryId
+    ? agencies.filter(a => String(a.ministryId) === String(formData.ministryId))
+    : agencies;
+
+  // Prevent non-admins from loading the form.
+  // Must stay after all hook calls to preserve React's hook ordering.
+  if (!canManage) {
+    return (
+      <div className="bg-white p-8 rounded border border-slate-200 text-center">
+        <h2 className="text-xl font-bold text-slate-800 mb-2">Access Denied</h2>
+        <p className="text-slate-600 mb-6">You do not have permission to create new projects.</p>
+        <button onClick={() => navigate('/projects')} className="bg-brand-600 text-white px-4 py-2 rounded font-medium hover:bg-brand-700">Back to Projects</button>
+      </div>
+    );
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -47,6 +92,9 @@ export default function AddProjectPage() {
   const validate = () => {
     if (!formData.projectCode.trim()) return "Project Code is required.";
     if (!formData.projectName.trim()) return "Project Name is required.";
+    if (!formData.ministryId) return "Ministry is required.";
+    if (!formData.sectorId) return "Sector is required.";
+    if (!formData.agencyId) return "Implementing Agency is required.";
     if (!formData.state.trim()) return "State is required.";
     if (!formData.district.trim()) return "District is required.";
     if (!formData.approvedCost || parseFloat(formData.approvedCost) < 0) return "Valid Approved Cost is required.";
@@ -136,34 +184,41 @@ export default function AddProjectPage() {
               
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">Ministry *</label>
-                <select name="ministryId" value={formData.ministryId} onChange={handleChange} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-                  <option value="1">Ministry of Road Transport and Highways</option>
-                  <option value="2">Ministry of Power</option>
-                  <option value="3">Ministry of Railways</option>
-                  <option value="4">Ministry of Jal Shakti</option>
-                  <option value="5">Ministry of Coal</option>
+                <select name="ministryId" value={formData.ministryId} onChange={handleMinistryChange} disabled={referenceLoading} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-slate-100">
+                  <option value="">{referenceLoading ? 'Loading ministries…' : '-- Select Ministry --'}</option>
+                  {ministries.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">Sector *</label>
                 <select name="sectorId" value={formData.sectorId} onChange={handleChange} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-                  <option value="1">Transport & Logistics</option>
-                  <option value="2">Energy & Power</option>
-                  <option value="3">Water & Sanitation</option>
-                  <option value="4">Railways</option>
-                  <option value="5">Coal & Mining</option>
+                  <option value="">-- Select Sector --</option>
+                  {sectors.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">Implementing Agency *</label>
-                <select name="agencyId" value={formData.agencyId} onChange={handleChange} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-                  <option value="1">NHAI</option>
-                  <option value="2">NTPC</option>
-                  <option value="3">NHPC</option>
-                  <option value="4">DFCCIL</option>
-                  <option value="5">NJM</option>
-                  <option value="6">CIL</option>
+                <select
+                  name="agencyId"
+                  value={formData.agencyId}
+                  onChange={handleChange}
+                  disabled={referenceLoading}
+                  className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-slate-100"
+                >
+                  <option value="">
+                    {referenceLoading ? 'Loading agencies…' : formData.ministryId ? '-- Select Agency --' : '-- Select a ministry first --'}
+                  </option>
+                  {visibleAgencies.map(a => (
+                    <option key={a.id} value={a.id}>{a.name} ({a.code})</option>
+                  ))}
                 </select>
+                {referenceError && (
+                  <p className="text-xs text-red-600 mt-1">{referenceError}</p>
+                )}
               </div>
             </div>
           </div>

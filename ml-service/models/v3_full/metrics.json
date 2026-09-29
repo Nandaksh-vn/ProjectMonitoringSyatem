@@ -1,0 +1,566 @@
+{
+  "model_version": "3.0.0",
+  "trained_at": "2026-09-29T19:41:39.197224+00:00",
+  "targets": {
+    "cost_overrun_risk": {
+      "model": "Logistic Regression",
+      "task": "classification",
+      "model_class": "LogisticRegression",
+      "model_version": "3.0.0",
+      "dataset": "Kaggle (real)",
+      "feature_names": [
+        "Budget",
+        "MaterialCost",
+        "LaborCost",
+        "EquipmentCost",
+        "TotalCurrentExpenditure",
+        "ExpenditureToBudgetRatio",
+        "progress_pct"
+      ],
+      "feature_descriptions": {
+        "Budget": "Sanctioned project cost (INR crore).",
+        "MaterialCost": "Expenditure on materials to date (INR crore).",
+        "LaborCost": "Expenditure on labour to date (INR crore).",
+        "EquipmentCost": "Expenditure on equipment to date (INR crore).",
+        "TotalCurrentExpenditure": "Material + labour + equipment spend to date.",
+        "ExpenditureToBudgetRatio": "Spend-to-sanction ratio; the core cost-pressure signal.",
+        "progress_pct": "Reported physical completion as a fraction between 0 and 1."
+      },
+      "metrics": {
+        "Accuracy": 0.995,
+        "Precision": 1.0,
+        "Recall": 0.9666666666666667,
+        "F1": 0.9830508474576272,
+        "ROC-AUC": 1.0
+      },
+      "global_feature_importance": [
+        {
+          "feature": "ExpenditureToBudgetRatio",
+          "mean_abs_shap": 3.1432115883593754,
+          "description": "Spend-to-sanction ratio; the core cost-pressure signal."
+        },
+        {
+          "feature": "progress_pct",
+          "mean_abs_shap": 2.6721808387790493,
+          "description": "Reported physical completion as a fraction between 0 and 1."
+        },
+        {
+          "feature": "Budget",
+          "mean_abs_shap": 2.0885819155391716,
+          "description": "Sanctioned project cost (INR crore)."
+        },
+        {
+          "feature": "LaborCost",
+          "mean_abs_shap": 0.3703324497198133,
+          "description": "Expenditure on labour to date (INR crore)."
+        },
+        {
+          "feature": "TotalCurrentExpenditure",
+          "mean_abs_shap": 0.3178836833205211,
+          "description": "Material + labour + equipment spend to date."
+        },
+        {
+          "feature": "MaterialCost",
+          "mean_abs_shap": 0.1965214385382524,
+          "description": "Expenditure on materials to date (INR crore)."
+        },
+        {
+          "feature": "EquipmentCost",
+          "mean_abs_shap": 0.05497954534607394,
+          "description": "Expenditure on equipment to date (INR crore)."
+        }
+      ],
+      "local_shap_reference": {
+        "Budget": 4.462893470717583,
+        "MaterialCost": -0.20667822337784317,
+        "LaborCost": -0.5475028214964963,
+        "EquipmentCost": -0.21587214521429648,
+        "TotalCurrentExpenditure": -0.8311321940658178,
+        "ExpenditureToBudgetRatio": 0.23191713755147148,
+        "progress_pct": 7.06351074352812
+      },
+      "n_train": 800,
+      "n_test": 200
+    },
+    "time_overrun_risk": {
+      "model": "XGBoost",
+      "task": "classification",
+      "model_class": "XGBClassifier",
+      "model_version": "3.0.0",
+      "dataset": "Synthetic (seeded)",
+      "feature_names": [
+        "Budget",
+        "PhysicalProgress",
+        "FinancialProgress",
+        "ProgressGap",
+        "CostGrowthPct",
+        "ExpenditureToBudgetRatio",
+        "DelayedMilestoneRatio",
+        "ElapsedDurationMonths",
+        "RemainingDurationMonths",
+        "ScheduleConsumptionRatio"
+      ],
+      "feature_descriptions": {
+        "Budget": "Sanctioned project cost (INR crore); larger works tolerate more slippage.",
+        "PhysicalProgress": "Physical completion as a fraction between 0 and 1.",
+        "FinancialProgress": "Financial completion as a fraction between 0 and 1.",
+        "ProgressGap": "Physical minus financial progress; negative means money is being spent ahead of work.",
+        "CostGrowthPct": "Percentage cost revision over the original sanction.",
+        "ExpenditureToBudgetRatio": "Spend-to-sanction ratio.",
+        "DelayedMilestoneRatio": "Delayed milestones divided by total planned milestones.",
+        "ElapsedDurationMonths": "Months elapsed since the scheduled start date.",
+        "RemainingDurationMonths": "Months remaining until the current completion target.",
+        "ScheduleConsumptionRatio": "Share of the total duration already consumed."
+      },
+      "metrics": {
+        "Accuracy": 0.8825,
+        "Precision": 0.8279569892473119,
+        "Recall": 0.8339350180505415,
+        "F1": 0.8309352517985612,
+        "ROC-AUC": 0.9556916152991282
+      },
+      "global_feature_importance": [
+        {
+          "feature": "DelayedMilestoneRatio",
+          "mean_abs_shap": 2.0421597957611084,
+          "description": "Delayed milestones divided by total planned milestones."
+        },
+        {
+          "feature": "ScheduleConsumptionRatio",
+          "mean_abs_shap": 0.9995048642158508,
+          "description": "Share of the total duration already consumed."
+        },
+        {
+          "feature": "FinancialProgress",
+          "mean_abs_shap": 0.9422876834869385,
+          "description": "Financial completion as a fraction between 0 and 1."
+        },
+        {
+          "feature": "CostGrowthPct",
+          "mean_abs_shap": 0.8591827154159546,
+          "description": "Percentage cost revision over the original sanction."
+        },
+        {
+          "feature": "ProgressGap",
+          "mean_abs_shap": 0.6354223489761353,
+          "description": "Physical minus financial progress; negative means money is being spent ahead of work."
+        },
+        {
+          "feature": "PhysicalProgress",
+          "mean_abs_shap": 0.41137978434562683,
+          "description": "Physical completion as a fraction between 0 and 1."
+        },
+        {
+          "feature": "RemainingDurationMonths",
+          "mean_abs_shap": 0.4112718105316162,
+          "description": "Months remaining until the current completion target."
+        },
+        {
+          "feature": "ExpenditureToBudgetRatio",
+          "mean_abs_shap": 0.3151915967464447,
+          "description": "Spend-to-sanction ratio."
+        },
+        {
+          "feature": "ElapsedDurationMonths",
+          "mean_abs_shap": 0.25035619735717773,
+          "description": "Months elapsed since the scheduled start date."
+        },
+        {
+          "feature": "Budget",
+          "mean_abs_shap": 0.18792209029197693,
+          "description": "Sanctioned project cost (INR crore); larger works tolerate more slippage."
+        }
+      ],
+      "local_shap_reference": {
+        "Budget": -0.08277233690023422,
+        "PhysicalProgress": -0.5411249995231628,
+        "FinancialProgress": -0.18143250048160553,
+        "ProgressGap": -1.0983437299728394,
+        "CostGrowthPct": 0.010176930576562881,
+        "ExpenditureToBudgetRatio": -0.06553695350885391,
+        "DelayedMilestoneRatio": 0.10475612431764603,
+        "ElapsedDurationMonths": -0.18186670541763306,
+        "RemainingDurationMonths": -0.2763184905052185,
+        "ScheduleConsumptionRatio": -1.0788859128952026
+      },
+      "n_train": 3200,
+      "n_test": 800
+    },
+    "overall_risk_score": {
+      "model": "XGBoost",
+      "task": "regression",
+      "model_class": "XGBRegressor",
+      "model_version": "3.0.0",
+      "dataset": "Synthetic (seeded)",
+      "feature_names": [
+        "Budget",
+        "PhysicalProgress",
+        "FinancialProgress",
+        "ProgressGap",
+        "CostGrowthPct",
+        "ExpenditureToBudgetRatio",
+        "DelayedMilestoneRatio",
+        "ElapsedDurationMonths",
+        "RemainingDurationMonths",
+        "ScheduleConsumptionRatio"
+      ],
+      "feature_descriptions": {
+        "Budget": "Sanctioned project cost (INR crore); larger works tolerate more slippage.",
+        "PhysicalProgress": "Physical completion as a fraction between 0 and 1.",
+        "FinancialProgress": "Financial completion as a fraction between 0 and 1.",
+        "ProgressGap": "Physical minus financial progress; negative means money is being spent ahead of work.",
+        "CostGrowthPct": "Percentage cost revision over the original sanction.",
+        "ExpenditureToBudgetRatio": "Spend-to-sanction ratio.",
+        "DelayedMilestoneRatio": "Delayed milestones divided by total planned milestones.",
+        "ElapsedDurationMonths": "Months elapsed since the scheduled start date.",
+        "RemainingDurationMonths": "Months remaining until the current completion target.",
+        "ScheduleConsumptionRatio": "Share of the total duration already consumed."
+      },
+      "metrics": {
+        "MAE": 4.923375679254532,
+        "RMSE": 6.281536243032999,
+        "R2": 0.8414068439840177
+      },
+      "global_feature_importance": [
+        {
+          "feature": "CostGrowthPct",
+          "mean_abs_shap": 7.881275177001953,
+          "description": "Percentage cost revision over the original sanction."
+        },
+        {
+          "feature": "DelayedMilestoneRatio",
+          "mean_abs_shap": 4.337867736816406,
+          "description": "Delayed milestones divided by total planned milestones."
+        },
+        {
+          "feature": "ScheduleConsumptionRatio",
+          "mean_abs_shap": 1.93276047706604,
+          "description": "Share of the total duration already consumed."
+        },
+        {
+          "feature": "PhysicalProgress",
+          "mean_abs_shap": 1.2426044940948486,
+          "description": "Physical completion as a fraction between 0 and 1."
+        },
+        {
+          "feature": "FinancialProgress",
+          "mean_abs_shap": 0.8794576525688171,
+          "description": "Financial completion as a fraction between 0 and 1."
+        },
+        {
+          "feature": "ExpenditureToBudgetRatio",
+          "mean_abs_shap": 0.653489351272583,
+          "description": "Spend-to-sanction ratio."
+        },
+        {
+          "feature": "ElapsedDurationMonths",
+          "mean_abs_shap": 0.6195329427719116,
+          "description": "Months elapsed since the scheduled start date."
+        },
+        {
+          "feature": "RemainingDurationMonths",
+          "mean_abs_shap": 0.5381479859352112,
+          "description": "Months remaining until the current completion target."
+        },
+        {
+          "feature": "ProgressGap",
+          "mean_abs_shap": 0.38360440731048584,
+          "description": "Physical minus financial progress; negative means money is being spent ahead of work."
+        },
+        {
+          "feature": "Budget",
+          "mean_abs_shap": 0.37703365087509155,
+          "description": "Sanctioned project cost (INR crore); larger works tolerate more slippage."
+        }
+      ],
+      "local_shap_reference": {
+        "Budget": -0.48517265915870667,
+        "PhysicalProgress": 0.818060040473938,
+        "FinancialProgress": 0.7956656217575073,
+        "ProgressGap": -0.4189850986003876,
+        "CostGrowthPct": -8.219676971435547,
+        "ExpenditureToBudgetRatio": -0.2732411324977875,
+        "DelayedMilestoneRatio": -4.190772533416748,
+        "ElapsedDurationMonths": -0.4307289719581604,
+        "RemainingDurationMonths": -0.4592509865760803,
+        "ScheduleConsumptionRatio": -1.978295922279358
+      },
+      "n_train": 3200,
+      "n_test": 800
+    }
+  },
+  "all_experiments": [
+    {
+      "target": "cost_overrun_risk",
+      "task": "classification",
+      "dataset": "Kaggle (real)",
+      "experiment": "EXPERIMENT_A",
+      "model": "Logistic Regression",
+      "Accuracy": 0.95,
+      "Precision": 0.8846153846153846,
+      "Recall": 0.7666666666666667,
+      "F1": 0.8214285714285714,
+      "ROC-AUC": 0.9870588235294118
+    },
+    {
+      "target": "cost_overrun_risk",
+      "task": "classification",
+      "dataset": "Kaggle (real)",
+      "experiment": "EXPERIMENT_A",
+      "model": "Decision Tree",
+      "Accuracy": 0.915,
+      "Precision": 0.696969696969697,
+      "Recall": 0.7666666666666667,
+      "F1": 0.7301587301587301,
+      "ROC-AUC": 0.8633333333333333
+    },
+    {
+      "target": "cost_overrun_risk",
+      "task": "classification",
+      "dataset": "Kaggle (real)",
+      "experiment": "EXPERIMENT_A",
+      "model": "Random Forest",
+      "Accuracy": 0.955,
+      "Precision": 0.8888888888888888,
+      "Recall": 0.8,
+      "F1": 0.8421052631578947,
+      "ROC-AUC": 0.9886274509803921
+    },
+    {
+      "target": "cost_overrun_risk",
+      "task": "classification",
+      "dataset": "Kaggle (real)",
+      "experiment": "EXPERIMENT_A",
+      "model": "XGBoost",
+      "Accuracy": 0.945,
+      "Precision": 0.7878787878787878,
+      "Recall": 0.8666666666666667,
+      "F1": 0.8253968253968254,
+      "ROC-AUC": 0.9872549019607842
+    },
+    {
+      "target": "cost_overrun_risk",
+      "task": "classification",
+      "dataset": "Kaggle (real)",
+      "experiment": "EXPERIMENT_B",
+      "model": "Logistic Regression",
+      "Accuracy": 0.995,
+      "Precision": 1.0,
+      "Recall": 0.9666666666666667,
+      "F1": 0.9830508474576272,
+      "ROC-AUC": 1.0
+    },
+    {
+      "target": "cost_overrun_risk",
+      "task": "classification",
+      "dataset": "Kaggle (real)",
+      "experiment": "EXPERIMENT_B",
+      "model": "Decision Tree",
+      "Accuracy": 0.975,
+      "Precision": 1.0,
+      "Recall": 0.8333333333333334,
+      "F1": 0.9090909090909091,
+      "ROC-AUC": 0.9656862745098039
+    },
+    {
+      "target": "cost_overrun_risk",
+      "task": "classification",
+      "dataset": "Kaggle (real)",
+      "experiment": "EXPERIMENT_B",
+      "model": "Random Forest",
+      "Accuracy": 0.975,
+      "Precision": 0.9629629629629629,
+      "Recall": 0.8666666666666667,
+      "F1": 0.9122807017543859,
+      "ROC-AUC": 0.9982352941176471
+    },
+    {
+      "target": "cost_overrun_risk",
+      "task": "classification",
+      "dataset": "Kaggle (real)",
+      "experiment": "EXPERIMENT_B",
+      "model": "XGBoost",
+      "Accuracy": 0.99,
+      "Precision": 0.9666666666666667,
+      "Recall": 0.9666666666666667,
+      "F1": 0.9666666666666667,
+      "ROC-AUC": 0.9998039215686274
+    },
+    {
+      "target": "time_overrun_risk",
+      "task": "classification",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_A",
+      "model": "Logistic Regression",
+      "Accuracy": 0.8,
+      "Precision": 0.7387755102040816,
+      "Recall": 0.6534296028880866,
+      "F1": 0.6934865900383141,
+      "ROC-AUC": 0.8663638685451194
+    },
+    {
+      "target": "time_overrun_risk",
+      "task": "classification",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_A",
+      "model": "Decision Tree",
+      "Accuracy": 0.7925,
+      "Precision": 0.7557603686635944,
+      "Recall": 0.592057761732852,
+      "F1": 0.6639676113360324,
+      "ROC-AUC": 0.8355122833417316
+    },
+    {
+      "target": "time_overrun_risk",
+      "task": "classification",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_A",
+      "model": "Random Forest",
+      "Accuracy": 0.82,
+      "Precision": 0.8181818181818182,
+      "Recall": 0.6173285198555957,
+      "F1": 0.7037037037037037,
+      "ROC-AUC": 0.8790510178020445
+    },
+    {
+      "target": "time_overrun_risk",
+      "task": "classification",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_A",
+      "model": "XGBoost",
+      "Accuracy": 0.8175,
+      "Precision": 0.7673469387755102,
+      "Recall": 0.6787003610108303,
+      "F1": 0.7203065134099617,
+      "ROC-AUC": 0.8739913440233035
+    },
+    {
+      "target": "time_overrun_risk",
+      "task": "classification",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_B",
+      "model": "Logistic Regression",
+      "Accuracy": 0.875,
+      "Precision": 0.8390804597701149,
+      "Recall": 0.7906137184115524,
+      "F1": 0.8141263940520446,
+      "ROC-AUC": 0.9402779024097301
+    },
+    {
+      "target": "time_overrun_risk",
+      "task": "classification",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_B",
+      "model": "Decision Tree",
+      "Accuracy": 0.84625,
+      "Precision": 0.7673611111111112,
+      "Recall": 0.7978339350180506,
+      "F1": 0.7823008849557522,
+      "ROC-AUC": 0.890654444298721
+    },
+    {
+      "target": "time_overrun_risk",
+      "task": "classification",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_B",
+      "model": "Random Forest",
+      "Accuracy": 0.875,
+      "Precision": 0.8416988416988417,
+      "Recall": 0.7870036101083032,
+      "F1": 0.8134328358208955,
+      "ROC-AUC": 0.953924525957576
+    },
+    {
+      "target": "time_overrun_risk",
+      "task": "classification",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_B",
+      "model": "XGBoost",
+      "Accuracy": 0.8825,
+      "Precision": 0.8279569892473119,
+      "Recall": 0.8339350180505415,
+      "F1": 0.8309352517985612,
+      "ROC-AUC": 0.9556916152991282
+    },
+    {
+      "target": "overall_risk_score",
+      "task": "regression",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_A",
+      "model": "Linear Regression",
+      "MAE": 11.291529949634993,
+      "RMSE": 14.019878272675065,
+      "R2": 0.20997435764656436
+    },
+    {
+      "target": "overall_risk_score",
+      "task": "regression",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_A",
+      "model": "Decision Tree",
+      "MAE": 11.451034006884727,
+      "RMSE": 14.369355482386378,
+      "R2": 0.1700971047794081
+    },
+    {
+      "target": "overall_risk_score",
+      "task": "regression",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_A",
+      "model": "Random Forest",
+      "MAE": 10.924253230525984,
+      "RMSE": 13.474050325135082,
+      "R2": 0.2702921268326871
+    },
+    {
+      "target": "overall_risk_score",
+      "task": "regression",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_A",
+      "model": "XGBoost",
+      "MAE": 11.197276318454742,
+      "RMSE": 14.000730119713335,
+      "R2": 0.21213089582244926
+    },
+    {
+      "target": "overall_risk_score",
+      "task": "regression",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_B",
+      "model": "Linear Regression",
+      "MAE": 6.422796692070656,
+      "RMSE": 7.890881294002688,
+      "R2": 0.7497329224793794
+    },
+    {
+      "target": "overall_risk_score",
+      "task": "regression",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_B",
+      "model": "Decision Tree",
+      "MAE": 5.849711336109112,
+      "RMSE": 7.46078813096202,
+      "R2": 0.7762710850805278
+    },
+    {
+      "target": "overall_risk_score",
+      "task": "regression",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_B",
+      "model": "Random Forest",
+      "MAE": 5.020604958973727,
+      "RMSE": 6.3693830912439156,
+      "R2": 0.8369399980564066
+    },
+    {
+      "target": "overall_risk_score",
+      "task": "regression",
+      "dataset": "Synthetic (seeded)",
+      "experiment": "EXPERIMENT_B",
+      "model": "XGBoost",
+      "MAE": 4.923375679254532,
+      "RMSE": 6.281536243032999,
+      "R2": 0.8414068439840177
+    }
+  ]
+}

@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
+    private final JavaMailSender mailSender;
 
-    @Autowired(required = false)
-    private JavaMailSender mailSender;
+    public EmailService(@Autowired(required = false) JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
 
     @Value("${app.mail.from:noreply@infrawatch.ai}")
     private String fromAddress;

@@ -172,5 +172,6 @@ CREATE TABLE IF NOT EXISTS recommendations (
     action_taken_status BOOLEAN DEFAULT FALSE,
     action_taken_details TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (project_id) REFERENCES projects(id)
 );

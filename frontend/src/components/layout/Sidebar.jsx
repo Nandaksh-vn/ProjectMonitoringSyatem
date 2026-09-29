@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
-  LayoutDashboard, FolderKanban, BarChart3, Bell, Upload,
+  LayoutDashboard, FolderKanban, BarChart3, Bell,
   Cpu, Lightbulb, MessageSquareText, LogOut, Menu, X,
   ChevronRight, Landmark, UserCircle,
 } from 'lucide-react';
@@ -15,7 +15,6 @@ const NAV_ITEMS = [
   { to: '/early-warnings',              label: 'Early Warnings',    icon: Bell },
   { to: '/recommendations',             label: 'Recommendations',   icon: Lightbulb },
   { to: '/model-performance',           label: 'Model Performance', icon: Cpu },
-  { to: '/data-upload',                 label: 'Data Upload',       icon: Upload },
   { to: '/ai-assistant',                label: 'AI Assistant',      icon: MessageSquareText },
 ];
 

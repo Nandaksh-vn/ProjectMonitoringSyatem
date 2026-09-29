@@ -1,4 +1,46 @@
+# Test profile: runs against an in-memory H2 database so `mvn test` needs no
+# MySQL server. The schema is generated from the JPA entities rather than from
+# schema.sql, which is MySQL-specific and is exercised by the docker-compose path.
 spring:
+  datasource:
+    url: jdbc:h2:mem:infrawatch-test;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    defer-datasource-initialization: true
   sql:
     init:
-      mode: never
+      mode: always
+      # The MySQL-only schema.sql must not run against H2; Hibernate already built
+      # the schema from the entities. schema-h2.sql is a deliberate no-op.
+      schema-locations: classpath:schema-h2.sql
+      data-locations: classpath:data-test.sql
+      encoding: UTF-8
+      # The main profile tolerates a partial seed; a test must fail loudly instead.
+      continue-on-error: false
+
+ml:
+  service:
+    url: http://localhost:0
+
+infrawatch:
+  scheduling:
+    # Scheduled jobs would fire against an empty database and make tests flaky.
+    enabled: false
+
+app:
+  auth:
+    allow-self-registration: true
+
+jwt:
+  secret: test-only-secret-value-not-used-anywhere-else-0123456789
+  expiration-ms: 3600000
+
+logging:
+  level:
+    org.hibernate.SQL: warn
+    org.springframework.security: warn

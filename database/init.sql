@@ -3,8 +3,8 @@
 -- Combined Schema Definition and Synthetic Seed Data
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS infrawatch_db;
-USE infrawatch_db;
+CREATE DATABASE IF NOT EXISTS infrawatchdb;
+USE infrawatchdb;
 
 -- 1. Roles Table
 CREATE TABLE IF NOT EXISTS roles (
@@ -183,14 +183,15 @@ CREATE TABLE IF NOT EXISTS alerts (
 CREATE TABLE IF NOT EXISTS recommendations (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     project_id BIGINT NOT NULL,
-    prediction_id BIGINT,
-    risk_factor VARCHAR(150) NOT NULL,
-    recommendation TEXT NOT NULL,
-    priority VARCHAR(20) NOT NULL DEFAULT 'MEDIUM',
-    source VARCHAR(50) NOT NULL DEFAULT 'SYSTEM_RULES',
+    recommendation_type VARCHAR(50),
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    priority_level VARCHAR(20) DEFAULT 'MEDIUM',
+    action_taken_status BOOLEAN DEFAULT FALSE,
+    action_taken_details TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-    FOREIGN KEY (prediction_id) REFERENCES predictions(id) ON DELETE SET NULL
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
 -- Seed Roles
@@ -198,13 +199,16 @@ INSERT IGNORE INTO roles (id, name, description) VALUES
 (1, 'ROLE_ADMIN', 'System Administrator with full access'),
 (2, 'ROLE_MONITOR', 'Project Officer & Monitoring Authority'),
 (3, 'ROLE_ANALYST', 'Data Scientist & Policy Analyst'),
-(4, 'ROLE_VIEWER', 'Public / Read-only Executive Viewer');
+(4, 'ROLE_VIEWER', 'Public / Read-only Executive Viewer'),
+(5, 'ROLE_PROJECT_MANAGER', 'Project Manager with project create/update rights');
 
 -- Seed Users
 INSERT IGNORE INTO users (id, username, password, full_name, email, department, role_id, is_active) VALUES
-(1, 'admin', '$2a$10$e8W/2s1Y7P7A/R6c5.vJ8eTfN.b9w3u8vXy4z7w6v5u4t3s2r1q0P', 'System Administrator', 'admin@infrawatch.gov.in', 'IPMD MoSPI', 1, TRUE),
-(2, 'monitor_user', '$2a$10$e8W/2s1Y7P7A/R6c5.vJ8eTfN.b9w3u8vXy4z7w6v5u4t3s2r1q0P', 'Rajesh Sharma', 'rajesh.sharma@morth.gov.in', 'Ministry of Road Transport', 2, TRUE),
-(3, 'analyst_user', '$2a$10$e8W/2s1Y7P7A/R6c5.vJ8eTfN.b9w3u8vXy4z7w6v5u4t3s2r1q0P', 'Dr. Ananya Verma', 'ananya.verma@infrawatch.gov.in', 'Data Analytics Cell', 3, TRUE);
+(1, 'admin', '$2b$12$5ixEuClmw5dSIZwI5eslre05bZ1KRVGBw2zsdswanfpoJRpkxYwyC', 'System Administrator', 'admin@infrawatch.gov.in', 'IPMD MoSPI', 1, TRUE),
+(2, 'monitor_user', '$2b$12$5ixEuClmw5dSIZwI5eslre05bZ1KRVGBw2zsdswanfpoJRpkxYwyC', 'Rajesh Sharma', 'rajesh.sharma@morth.gov.in', 'Ministry of Road Transport', 2, TRUE),
+(3, 'analyst_user', '$2b$12$5ixEuClmw5dSIZwI5eslre05bZ1KRVGBw2zsdswanfpoJRpkxYwyC', 'Dr. Ananya Verma', 'ananya.verma@infrawatch.gov.in', 'Data Analytics Cell', 3, TRUE),
+(4, 'project_manager', '$2b$12$5ixEuClmw5dSIZwI5eslre05bZ1KRVGBw2zsdswanfpoJRpkxYwyC', 'Suresh Menon', 'suresh.menon@infrawatch.gov.in', 'Project Delivery Unit', 5, TRUE),
+(5, 'viewer_user', '$2b$12$5ixEuClmw5dSIZwI5eslre05bZ1KRVGBw2zsdswanfpoJRpkxYwyC', 'Priya Nair', 'priya.nair@infrawatch.gov.in', 'Policy Review Unit', 4, TRUE);
 
 -- Seed Ministries
 INSERT IGNORE INTO ministries (id, code, name, description) VALUES
@@ -329,8 +333,8 @@ INSERT IGNORE INTO alerts (id, project_id, alert_type, severity, title, descript
 (4, 2, 'MILESTONE_DELAY', 'MEDIUM', 'Turbine Generator Building Delay', 'TG Building Civil Works milestone has slipped past target date by 90 days.', 90.00, 30.00, 'Issue contractual notice to main civil EPC contractor for resource deployment.', FALSE);
 
 -- Seed Recommendations
-INSERT IGNORE INTO recommendations (id, project_id, prediction_id, risk_factor, recommendation, priority, source) VALUES
-(1, 3, 3, 'Cost Growth %', 'Initiate mandatory third-party cost escalation audit prior to approving further fund release.', 'URGENT', 'LLM_ASSISTANT'),
-(2, 3, 3, 'Progress Gap', 'Deploy specialized geological mitigation team to expedite dam block 1-5 stabilization.', 'HIGH', 'SYSTEM_RULES'),
-(3, 4, 4, 'Land Acquisition ROW Delay', 'Schedule monthly coordination meeting between Ministry of Railways and State Nodal Secretary.', 'HIGH', 'LLM_ASSISTANT'),
-(4, 2, 2, 'Equipment Delivery Bottleneck', 'Fast-track heavy equipment transport permits across inter-state border checkposts.', 'MEDIUM', 'ML_MODEL');
+INSERT IGNORE INTO recommendations (id, project_id, recommendation_type, title, description, priority_level) VALUES
+(1, 3, 'COST', 'Cost Growth Audit', 'Initiate mandatory third-party cost escalation audit prior to approving further fund release.', 'CRITICAL'),
+(2, 3, 'PROGRESS', 'Geological Mitigation Team', 'Deploy specialized geological mitigation team to expedite dam block 1-5 stabilization.', 'HIGH'),
+(3, 4, 'LAND_ACQUISITION', 'Monthly ROW Coordination', 'Schedule monthly coordination meeting between Ministry of Railways and State Nodal Secretary.', 'HIGH'),
+(4, 2, 'PROCUREMENT', 'Equipment Permit Fast Track', 'Fast-track heavy equipment transport permits across inter-state border checkposts.', 'MEDIUM');

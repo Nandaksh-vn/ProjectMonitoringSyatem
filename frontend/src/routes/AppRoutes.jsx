@@ -10,6 +10,8 @@ import SectorDirectoryPage from '../pages/public/SectorDirectoryPage';
 import PublicSectorDetailPage from '../pages/public/PublicSectorDetailPage';
 import ProjectDirectoryPage from '../pages/public/ProjectDirectoryPage';
 import PublicProjectOverviewPage from '../pages/public/PublicProjectOverviewPage';
+import AboutPage from '../pages/public/AboutPage';
+import ReportsPage from '../pages/public/ReportsPage';
 
 import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/DashboardPage';
@@ -22,6 +24,7 @@ import ModelPerformancePage from '../pages/ModelPerformancePage';
 import DataUploadPage from '../pages/DataUploadPage';
 import AiAssistantPage from '../pages/AiAssistantPage';
 import AddProjectPage from '../pages/AddProjectPage';
+import EditProjectPage from '../pages/EditProjectPage';
 import { LoadingState } from '../components/ui/Shared';
 
 function ProtectedRoute({ children }) {
@@ -57,8 +60,8 @@ export default function AppRoutes() {
         <Route index element={<HomePage />} />
         <Route path="sectors" element={<SectorDirectoryPage />} />
         <Route path="sectors/:id" element={<PublicSectorDetailPage />} />
-        <Route path="about" element={<div className="py-24 text-center">About Page Placeholder</div>} />
-        <Route path="reports" element={<div className="py-24 text-center">Reports Placeholder</div>} />
+        <Route path="about" element={<AboutPage />} />
+        <Route path="reports" element={<ReportsPage />} />
       </Route>
 
       {/* Conditionally rendered based on role/auth */}
@@ -72,6 +75,7 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/add-project" element={<AddProjectPage />} />
+        <Route path="/projects/:id/edit" element={<EditProjectPage />} />
         <Route path="/risk-analytics" element={<RiskAnalyticsPage />} />
         <Route path="/early-warnings" element={<AlertsPage />} />
         <Route path="/recommendations" element={<RecommendationsPage />} />

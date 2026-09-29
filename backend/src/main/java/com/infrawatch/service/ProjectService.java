@@ -7,7 +7,6 @@ import com.infrawatch.repository.ProjectRepository;
 import com.infrawatch.repository.MinistryRepository;
 import com.infrawatch.repository.SectorRepository;
 import com.infrawatch.repository.PredictionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,10 +17,18 @@ import java.util.Optional;
 @Service
 public class ProjectService {
 
-    @Autowired private ProjectRepository projectRepository;
-    @Autowired private MinistryRepository ministryRepository;
-    @Autowired private SectorRepository sectorRepository;
-    @Autowired private PredictionRepository predictionRepository;
+    public ProjectService(ProjectRepository projectRepository, MinistryRepository ministryRepository, SectorRepository sectorRepository, PredictionRepository predictionRepository) {
+        this.projectRepository = projectRepository;
+        this.ministryRepository = ministryRepository;
+        this.sectorRepository = sectorRepository;
+        this.predictionRepository = predictionRepository;
+    }
+
+
+    private final ProjectRepository projectRepository;
+    private final MinistryRepository ministryRepository;
+    private final SectorRepository sectorRepository;
+    private final PredictionRepository predictionRepository;
 
     public Page<ProjectDTO> getAllProjects(String search, Pageable pageable) {
         Page<Project> projects;

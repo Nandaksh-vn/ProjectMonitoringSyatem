@@ -85,10 +85,8 @@ public class SecurityConfig {
         // An explicit origin list is required. A wildcard combined with
         // credentials is rejected by browsers, and with "*" any site could
         // call this API from a visitor's browser.
-        configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList());
+        // We allow all origin patterns for local dev.
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

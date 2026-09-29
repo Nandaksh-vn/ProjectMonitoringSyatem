@@ -2,33 +2,50 @@ package com.infrawatch.service;
 
 import com.infrawatch.entity.*;
 import com.infrawatch.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class RecommendationEngineService {
 
-    @Autowired
-    private ProjectRepository projectRepository;
+    public RecommendationEngineService(ProjectRepository projectRepository, ProjectMonthlyDataRepository monthlyDataRepository, PredictionRepository predictionRepository, AlertRepository alertRepository, RecommendationRepository recommendationRepository, @Lazy RecommendationEngineService self) {
+        this.projectRepository = projectRepository;
+        this.monthlyDataRepository = monthlyDataRepository;
+        this.predictionRepository = predictionRepository;
+        this.alertRepository = alertRepository;
+        this.recommendationRepository = recommendationRepository;
+        this.self = self;
+    }
 
-    @Autowired
-    private ProjectMonthlyDataRepository monthlyDataRepository;
 
-    @Autowired
-    private PredictionRepository predictionRepository;
+    private static final Logger logger = LoggerFactory.getLogger(RecommendationEngineService.class);
 
-    @Autowired
-    private AlertRepository alertRepository;
+    private final ProjectRepository projectRepository;
 
-    @Autowired
-    private RecommendationRepository recommendationRepository;
+    private final ProjectMonthlyDataRepository monthlyDataRepository;
+
+    private final PredictionRepository predictionRepository;
+
+    private final AlertRepository alertRepository;
+
+    private final RecommendationRepository recommendationRepository;
+
+    /**
+     * Self-reference so {@link #runEngine()} can enter a transaction per project
+     * through the Spring proxy. Calling {@code evaluateProject} directly would
+     * bypass the proxy and silently drop the transaction boundary.
+     */
+    private final RecommendationEngineService self;
 
     // Configurable thresholds
     @org.springframework.beans.factory.annotation.Value("${infrawatch.alert.thresholds.progress-gap:10.0}")
@@ -40,13 +57,34 @@ public class RecommendationEngineService {
     @org.springframework.beans.factory.annotation.Value("${infrawatch.alert.thresholds.high-risk:70.0}")
     private BigDecimal highRiskThreshold;
 
+    @org.springframework.beans.factory.annotation.Value("${infrawatch.alert.thresholds.time-overrun-probability:0.60}")
+    private BigDecimal timeOverrunProbabilityThreshold;
+
+    @org.springframework.beans.factory.annotation.Value("${infrawatch.alert.thresholds.predicted-delay-months:3.0}")
+    private BigDecimal predictedDelayThreshold;
+
+    @org.springframework.beans.factory.annotation.Value("${infrawatch.alert.thresholds.cost-overrun-probability:0.60}")
+    private BigDecimal costOverrunProbabilityThreshold;
+
     public void runEngine() {
         List<Project> projects = projectRepository.findAll();
+        int evaluated = 0;
         for (Project p : projects) {
-            evaluateProject(p);
+            try {
+                self.evaluateProject(p);
+                evaluated++;
+            } catch (Exception e) {
+                logger.error("Rules engine failed for project {}: {}", p.getProjectCode(), e.getMessage());
+            }
         }
+        logger.info("Rules engine evaluated {} of {} projects", evaluated, projects.size());
     }
 
+    /**
+     * Applies every rule to one project inside its own transaction, so a single
+     * malformed row cannot leave the portfolio half-evaluated.
+     */
+    @Transactional
     public void evaluateProject(Project p) {
         List<ProjectMonthlyData> monthlyDataList = monthlyDataRepository.findByProjectIdOrderByReportingMonthDesc(p.getId());
         ProjectMonthlyData currentMonth = monthlyDataList.isEmpty() ? null : monthlyDataList.get(0);
@@ -156,6 +194,35 @@ public class RecommendationEngineService {
                             "Analyze recent predictions and intervene.");
                 }
             }
+        }
+
+        // 9. ML schedule-slip probability. Only fires once a real model prediction
+        //    exists, so it stays silent on legacy seed rows with NULL columns.
+        if (currentPrediction != null && currentPrediction.getTimeOverrunProbability() != null) {
+            if (currentPrediction.getTimeOverrunProbability().compareTo(timeOverrunProbabilityThreshold) > 0
+                    && currentPrediction.getPredictedDelayMonths() != null
+                    && currentPrediction.getPredictedDelayMonths().compareTo(predictedDelayThreshold) > 0) {
+                createAlertIfNotExists(p.getId(), "Predicted Schedule Slip", "HIGH",
+                        "ML Predicts Schedule Overrun",
+                        "The ML model forecasts a schedule overrun above the configured delay threshold.",
+                        currentPrediction.getPredictedDelayMonths(), predictedDelayThreshold,
+                        "Review the critical path, resource loading and pending approvals before the slip compounds.");
+                createRecommendationIfNotExists(p.getId(), "SCHEDULE", "Predicted schedule overrun",
+                        "The ML model forecasts a completion slip of "
+                                + currentPrediction.getPredictedDelayMonths().stripTrailingZeros().toPlainString()
+                                + " months. Review the critical path, resource loading and pending approvals.",
+                        "HIGH");
+            }
+        }
+
+        // 10. ML cost-breach probability.
+        if (currentPrediction != null && currentPrediction.getCostOverrunProbability() != null
+                && currentPrediction.getCostOverrunProbability().compareTo(costOverrunProbabilityThreshold) > 0) {
+            createAlertIfNotExists(p.getId(), "Predicted Cost Breach", "HIGH",
+                    "ML Predicts Cost Overrun",
+                    "The ML model forecasts a cost overrun above the configured probability threshold.",
+                    currentPrediction.getCostOverrunProbability(), costOverrunProbabilityThreshold,
+                    "Review procurement exposure, contract variations and committed-versus-spent cost.");
         }
     }
 

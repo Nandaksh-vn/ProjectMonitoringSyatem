@@ -181,11 +181,27 @@ export default function RiskAnalyticsPage() {
     const overallRisk = currentPrediction.overallRiskScore || 0;
     const rLevel = currentPrediction.riskLevel || 'LOW';
 
-    // Mock category scores since backend doesn't split it out by category
-    const costRisk = Math.min(100, Math.max(0, overallRisk + (currentPrediction.predictedCostOverrunPct > 10 ? 15 : -10)));
-    const scheduleRisk = Math.min(100, Math.max(0, overallRisk + (currentPrediction.predictedDelayMonths > 6 ? 20 : -5)));
-    const progressRisk = Math.min(100, Math.max(0, overallRisk + ((projectData.physicalProgress < 50) ? 10 : -10)));
-    const milestoneRisk = overallRisk;
+    // Category scores derived from stored model output and measured project data.
+    // These were previously invented with fixed offsets around the overall score,
+    // which made four of the five tiles on this page decorative.
+    const costRisk = (Number(currentPrediction.costOverrunProbability) || 0) * 100;
+    const scheduleRisk = (Number(currentPrediction.timeOverrunProbability) || 0) * 100;
+
+    // Latest month's planned-vs-actual physical gap, saturating at 25 points.
+    const latestMonth = projectMonthlyData[0];
+    const progressGapPct = latestMonth
+      ? Math.max(
+          0,
+          (Number(latestMonth.plannedPhysicalProgress) || 0) -
+            (Number(latestMonth.actualPhysicalProgress) || 0)
+        )
+      : 0;
+    const progressRisk = Math.min(100, (progressGapPct / 25) * 100);
+
+    // Share of milestones the rules engine has flagged as delayed.
+    const milestoneRisk = projectMilestones.length
+      ? (projectMilestones.filter(m => m.status === 'DELAYED').length / projectMilestones.length) * 100
+      : 0;
 
     const costGrowthPct = (((projectData.revisedCost - projectData.approvedCost) / projectData.approvedCost) * 100) || 0;
     const scheduleVarianceMonths = Math.round((new Date(projectData.revisedCompletionDate) - new Date(projectData.originalCompletionDate)) / (1000 * 60 * 60 * 24 * 30)) || 0;
@@ -229,14 +245,15 @@ export default function RiskAnalyticsPage() {
             <div className={`text-2xl font-black ${rLevel === 'CRITICAL' ? 'text-red-700' : rLevel === 'HIGH' ? 'text-orange-700' : rLevel === 'MEDIUM' ? 'text-amber-700' : 'text-emerald-700'}`}>{overallRisk.toFixed(1)} <span className="text-sm font-semibold opacity-60">/ 100</span></div>
           </div>
           {[
-            { label: 'Cost Risk', val: costRisk },
-            { label: 'Schedule Risk', val: scheduleRisk },
-            { label: 'Progress Risk', val: progressRisk },
-            { label: 'Milestone Risk', val: milestoneRisk }
+            { label: 'Cost Risk', val: costRisk, src: 'model cost-overrun probability' },
+            { label: 'Schedule Risk', val: scheduleRisk, src: 'model schedule-overrun probability' },
+            { label: 'Progress Risk', val: progressRisk, src: `latest plan-vs-actual gap ${progressGapPct.toFixed(1)} pts` },
+            { label: 'Milestone Risk', val: milestoneRisk, src: 'delayed milestones / total' }
           ].map((r, i) => (
              <div key={i} className="bg-white p-4 rounded border border-slate-200 shadow-sm text-center flex flex-col justify-center">
               <div className="text-xs font-bold text-slate-500 uppercase mb-1">{r.label}</div>
               <div className="text-xl font-bold text-slate-800">{r.val.toFixed(0)} <span className="text-xs text-slate-400">/ 100</span></div>
+              <div className="text-[10px] text-slate-400 mt-1 leading-tight">{r.src}</div>
             </div>
           ))}
         </div>
