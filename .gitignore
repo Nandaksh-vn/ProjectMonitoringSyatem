@@ -1,0 +1,181 @@
+# ==========================================
+# Node.js / React / Vite
+# ==========================================
+
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# ==========================================
+# Java / Spring Boot / Maven
+# ==========================================
+
+backend/target/
+
+# Spring Boot local environment files
+backend/.env
+
+# Maven generated files
+*.class
+
+# Maven logs
+backend/*.log
+
+
+# ==========================================
+# IDE / Editor files
+# ==========================================
+
+.idea/
+*.iml
+
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.example.json
+
+.eclipse/
+.classpath
+.project
+.settings/
+
+
+# ==========================================
+# Python / ML
+# ==========================================
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+ml-service/venv/
+ml-service/.venv/
+
+# Python environment
+ml-service/.env
+
+# Python logs
+*.log
+
+
+# ==========================================
+# Machine Learning generated models
+# ==========================================
+
+ml-service/models/*.pkl
+ml-service/models/*.joblib
+ml-service/models/*.pickle
+
+
+# ==========================================
+# Environment / Secrets
+# ==========================================
+
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+.env.*.local
+
+frontend/.env
+backend/.env
+ml-service/.env
+
+# Keep example environment files
+!.env.example
+!frontend/.env.example
+!backend/.env.example
+!ml-service/.env.example
+
+
+# ==========================================
+# Logs
+# ==========================================
+
+*.log
+logs/
+
+
+# ==========================================
+# Operating System files
+# ==========================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+# ==========================================
+# Temporary files
+# ==========================================
+
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+
+# ==========================================
+# Coverage / Testing generated files
+# ==========================================
+
+coverage/
+.nyc_output/
+.pytest_cache/
+htmlcov/
+
+
+# ==========================================
+# Build / Generated files
+# ==========================================
+
+dist/
+build/
+out/
+
+
+# ==========================================
+# Docker local data
+# ==========================================
+
+docker-data/
+
+# Docker override files containing local configuration
+docker-compose.override.yml
+
+
+# ==========================================
+# Database local files
+# ==========================================
+
+*.sqlite
+*.sqlite3
+*.db
+
+
+# ==========================================
+# OS / tooling
+# ==========================================
+
+.DS_Store

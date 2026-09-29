@@ -1,0 +1,33 @@
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: infrawatch-backend
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:infrawatchdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  jpa:
+    database-platform: ${SPRING_JPA_DIALECT:org.hibernate.dialect.H2Dialect}
+    hibernate:
+      ddl-auto: none
+    defer-datasource-initialization: true
+    show-sql: false
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+
+ml:
+  service:
+    url: ${ML_SERVICE_URL:http://localhost:8000}
+
+jwt:
+  secret: ${JWT_SECRET:infrawatch-local-dev-secret-do-not-use-in-production-change-me}
+  expiration-ms: 86400000
