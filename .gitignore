@@ -179,3 +179,5 @@ docker-compose.override.yml
 # ==========================================
 
 .DS_Store
+
+ml-service/data/raw/
