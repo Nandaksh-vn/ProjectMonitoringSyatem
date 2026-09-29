@@ -7,17 +7,32 @@ import { MapPin, Building, Calendar, DollarSign, Activity, AlertCircle, Clock, F
 export default function PublicProjectOverviewPage() {
   const { id } = useParams();
   const [project, setProject] = useState(null);
+  const [milestones, setMilestones] = useState([]);
+  const [predictions, setPredictions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    publicService.getProjectById(id)
-      .then(res => setProject(res.data))
+    Promise.all([
+      publicService.getProjectById(id),
+      publicService.getMilestones(id),
+      publicService.getPredictions(id)
+    ])
+      .then(([pRes, mRes, predRes]) => {
+        setProject(pRes.data);
+        setMilestones(mRes.data || []);
+        setPredictions(predRes.data || []);
+      })
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
   }, [id]);
 
   if (loading) return <div className="py-24"><LoadingState message="Loading project information..." /></div>;
   if (!project) return <div className="py-24 text-center">Project information could not be loaded. Please try again.</div>;
+
+  const pred = predictions[0];
+  const completedMs = milestones.filter(m => m.status === 'COMPLETED').length;
+  const delayedMs = milestones.filter(m => m.status === 'DELAYED').length;
+  const pendingMs = milestones.filter(m => m.status === 'PENDING' || m.status === 'IN_PROGRESS').length;
 
   return (
     <div className="py-12 px-4 max-w-7xl mx-auto min-h-screen">
@@ -157,12 +172,33 @@ export default function PublicProjectOverviewPage() {
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="border border-slate-200 rounded-lg p-5 bg-white">
               <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2"><Flag className="w-4 h-4 text-slate-500"/> Milestones</h3>
-              <p className="text-sm text-slate-500 italic py-4 text-center bg-slate-50 rounded">Milestone data is not available for this project.</p>
+              {milestones.length === 0 ? (
+                <p className="text-sm text-slate-500 italic py-4 text-center bg-slate-50 rounded">Milestone data is not available for this project.</p>
+              ) : (
+                <div className="flex gap-6 py-2">
+                  <div><div className="text-xs font-semibold text-slate-500 mb-0.5">Completed</div><div className="text-xl font-bold text-emerald-600">{completedMs}</div></div>
+                  <div><div className="text-xs font-semibold text-slate-500 mb-0.5">Pending</div><div className="text-xl font-bold text-blue-600">{pendingMs}</div></div>
+                  <div><div className="text-xs font-semibold text-slate-500 mb-0.5">Delayed</div><div className="text-xl font-bold text-red-600">{delayedMs}</div></div>
+                </div>
+              )}
             </div>
             
             <div className="border border-slate-200 rounded-lg p-5 bg-white">
-              <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-slate-500"/> Progress Trend</h3>
-              <p className="text-sm text-slate-500 italic py-4 text-center bg-slate-50 rounded">Historical progress data is not available.</p>
+              <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2"><Activity className="w-4 h-4 text-slate-500"/> Risk Analysis</h3>
+              {pred ? (
+                <div>
+                  <div className="flex justify-between items-end mb-1 text-sm">
+                    <span className="text-xs font-semibold text-slate-700">Predicted Overall Risk</span>
+                    <span className="font-bold text-slate-900">{pred.overallRiskScore.toFixed(0)}/100</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
+                    <div className={`h-2 rounded-full ${pred.overallRiskScore > 75 ? 'bg-red-500' : pred.overallRiskScore > 40 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(100, Math.max(0, pred.overallRiskScore))}%` }}></div>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">Cost Risk: {pred.predictedCostOverrunPct.toFixed(1)}% | Delay Risk: {pred.predictedDelayMonths.toFixed(1)}m</p>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 italic py-4 text-center bg-slate-50 rounded">AI Risk analysis is not available.</p>
+              )}
             </div>
           </div>
         </div>

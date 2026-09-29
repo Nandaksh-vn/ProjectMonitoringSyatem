@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 
-export default function DashboardLayout() {
+export default function DashboardLayout({ children }) {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-900">
       {/* Top Header */}
@@ -33,7 +33,7 @@ export default function DashboardLayout() {
           {/* Content Wrapper */}
           <main className="flex-1 p-4 lg:p-8">
             <div className="max-w-[1600px] mx-auto w-full space-y-6">
-              <Outlet />
+              {children || <Outlet />}
             </div>
           </main>
           

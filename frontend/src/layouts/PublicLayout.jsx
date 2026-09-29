@@ -3,7 +3,7 @@ import { Outlet, Link } from 'react-router-dom';
 import { Activity, UserCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function PublicLayout() {
+export default function PublicLayout({ children }) {
   const { isAuthenticated } = useAuth();
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -45,7 +45,7 @@ export default function PublicLayout() {
       </header>
 
       <main className="flex-1 w-full">
-        <Outlet />
+        {children || <Outlet />}
       </main>
 
       <footer className="bg-slate-900 text-slate-400 py-12 text-center text-sm">

@@ -71,4 +71,20 @@ public class PublicController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @Autowired
+    private com.infrawatch.repository.MilestoneRepository milestoneRepository;
+
+    @Autowired
+    private com.infrawatch.repository.PredictionRepository predictionRepository;
+
+    @GetMapping("/projects/{id}/milestones")
+    public ResponseEntity<List<com.infrawatch.entity.Milestone>> getPublicMilestones(@org.springframework.web.bind.annotation.PathVariable Long id) {
+        return ResponseEntity.ok(milestoneRepository.findByProjectId(id));
+    }
+
+    @GetMapping("/projects/{id}/predictions")
+    public ResponseEntity<List<com.infrawatch.entity.Prediction>> getPublicPredictions(@org.springframework.web.bind.annotation.PathVariable Long id) {
+        return ResponseEntity.ok(predictionRepository.findByProjectIdOrderByPredictionDateDesc(id));
+    }
 }

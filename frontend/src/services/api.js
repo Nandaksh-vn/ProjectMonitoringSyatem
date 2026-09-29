@@ -53,6 +53,8 @@ export const publicService = {
   getProjects: () => api.get('/public/projects'),
   getProjectById: (id) => api.get(`/public/projects/${id}`),
   getSectors: () => api.get('/public/sectors'),
+  getMilestones: (id) => api.get(`/public/projects/${id}/milestones`),
+  getPredictions: (id) => api.get(`/public/projects/${id}/predictions`)
 };
 
 // ─── Projects ────────────────────────────────────────────────────────────────
