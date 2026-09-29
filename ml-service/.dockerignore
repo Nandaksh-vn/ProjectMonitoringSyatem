@@ -1,0 +1,28 @@
+# Raw datasets are only needed for offline training (train_and_evaluate.py),
+# never at runtime. Excluding this drops ~1.2GB from the build context.
+data/
+
+# Python caches / virtualenvs
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+venv/
+.venv/
+
+# Local env files must never be baked into the image
+.env
+.env.*
+!.env.example
+
+*.log
+
+# Editor / OS noise
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# VCS
+.git
+.gitignore

@@ -46,16 +46,59 @@ To showcase the platform:
 2. **ML Service**: `cd ml-service && pip install -r requirements.txt && python main.py` (Runs on port 8000)
 3. **Backend**: Ensure MySQL is running locally or via Docker on port 3307, then `cd backend && mvn spring-boot:run` (Runs on port 8080)
 
-### Option 2: Docker Setup
-A complete `docker-compose.yml` is provided for production/demo deployment.
-```bash
-# Ensure Docker is running
-docker compose up --build
+### Option 2: Docker Deployment (recommended)
+
+Run the deploy script. It is idempotent — safe to run repeatedly, and it takes
+about 15 seconds when the Docker layer cache is warm.
+
+```powershell
+# Windows
+.\deploy.ps1
 ```
-This will start MySQL (mapped to host 3307), Backend (8080), ML Service (8000), and Frontend (3000).
+
+```bash
+# Linux / macOS / Git Bash
+./deploy.sh
+```
+
+The script creates `.env` with a random `JWT_SECRET` if it is missing, builds,
+starts, then polls the real endpoints and verifies the seeded login before
+reporting success. It exits non-zero and prints the failing service's logs if
+anything does not come up.
+
+| Command | Effect |
+| --- | --- |
+| `.\deploy.ps1` | Build, start, verify. Keeps all data. |
+| `.\deploy.ps1 -Fresh` | **Deletes all data** and re-seeds the demo dataset. Asks for confirmation. |
+| `.\deploy.ps1 -Fresh -Yes` | Same, without the confirmation prompt (CI). |
+
+Manual equivalent, if you prefer not to use the script:
+
+```bash
+docker compose up -d --build
+```
+
+Do **not** add `--no-cache` unless you are debugging the build itself; it forces
+a full Maven and npm reinstall and turns a 15-second deploy into several minutes.
+
+To wipe the database volume by hand: `docker compose down -v && docker compose up -d`
+
+This starts MySQL (mapped to host 3307), Backend (8080), ML Service (8000), and Frontend (3000).
+
+### Deployment gotcha: never change `DB_PASSWORD` on an existing volume
+
+MySQL only applies `MYSQL_ROOT_PASSWORD` when the volume is **first** created.
+Editing `DB_PASSWORD` in `.env` afterwards leaves the database on the old
+password while the backend connects with the new one, producing an opaque
+`Access denied for user 'root'` on every start. The deploy script detects this
+and fails early with an explanation. If it happens, either restore the previous
+password or run `.\deploy.ps1 -Fresh` to re-initialise.
 
 ## Environment Variables
-Review the `.env.example` in the root directory. Configure your `DB_PASSWORD` and `JWT_SECRET` accordingly before running Docker.
+`.env` is gitignored, so it is absent on every fresh clone. The deploy script
+generates it automatically with a random `JWT_SECRET`. To configure it by hand,
+copy `.env.example` to `.env` and set at minimum `DB_PASSWORD` and `JWT_SECRET`.
+Never commit `.env`.
 
 ## Known Limitations & Future Enhancements
 - Currently using synthetic demo data for the hackathon presentation.

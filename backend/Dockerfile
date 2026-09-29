@@ -10,7 +10,10 @@ RUN mvn dependency:go-offline -q
 
 COPY src src
 
-RUN mvn clean package -DskipTests -q
+# -Dmaven.test.skip=true (not -DskipTests) also skips test compilation, so a
+# broken or half-written test source can never break the deployable image.
+# Tests are run separately via `mvn test`.
+RUN mvn clean package -Dmaven.test.skip=true -q
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

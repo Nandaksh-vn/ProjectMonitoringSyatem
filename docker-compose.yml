@@ -13,7 +13,7 @@ services:
     networks:
       - infrawatch-net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-root}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -27,11 +27,15 @@ services:
     environment:
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:mysql://db:3306/infrawatchdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
       - SPRING_DATASOURCE_DRIVER=com.mysql.cj.jdbc.Driver
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-root}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-root}
       - SPRING_JPA_DIALECT=org.hibernate.dialect.MySQLDialect
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET=${JWT_SECRET:-infrawatch-local-dev-secret-do-not-use-in-production-change-me}
       - ML_SERVICE_URL=http://ml-service:8000
+      - MAIL_HOST=${MAIL_HOST:-smtp.gmail.com}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
     depends_on:
       db:
         condition: service_healthy
@@ -53,18 +57,21 @@ services:
       - infrawatch-net
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        # Baked into the bundle at build time. Must be reachable from the
+        # browser, so it stays on the published host port, not a Compose
+        # service name.
+        VITE_ML_API_URL: ${VITE_ML_API_URL:-http://localhost:8000}
     container_name: infrawatch-frontend
     ports:
       - "3000:3000"
-    environment:
-      - VITE_API_URL=http://localhost:8080/api/v1
-      - VITE_ML_API_URL=http://localhost:8000
-      - BACKEND_URL=http://backend:8080
     depends_on:
       - backend
     networks:
       - infrawatch-net
+    restart: unless-stopped
 
 volumes:
   db_data:

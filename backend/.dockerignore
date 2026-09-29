@@ -1,0 +1,22 @@
+target
+.mvn
+mvnw
+mvnw.cmd
+
+# Local env files must never be baked into the image
+.env
+.env.*
+!.env.example
+
+*.log
+*.class
+
+# Editor / OS noise
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# VCS
+.git
+.gitignore
